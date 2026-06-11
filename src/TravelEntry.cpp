@@ -101,7 +101,7 @@ std::string TravelEntry::getRatingStars() const {
     int full  = static_cast<int>(m_rating);
     int empty = 5 - full;
     std::string stars;
-    for (int i = 0; i < full;  ++i) stars += "\u2605"; // ★
-    for (int i = 0; i < empty; ++i) stars += "\u2606"; // ☆
+    for (int i = 0; i < full;  ++i) stars += "*";
+    for (int i = 0; i < empty; ++i) stars += "-";
     return stars;
 }
