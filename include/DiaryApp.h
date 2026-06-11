@@ -4,6 +4,7 @@
 #include <string>
 #include "TravelEntry.h"
 #include "Database.h"
+#include "PreTripCheck.h"
 
 // ============================================================
 //  DiaryApp — SFML window and UI controller
@@ -23,8 +24,31 @@ private:
     int                       m_scrollOffset;
 
     // ── UI State ─────────────────────────────────────────────
-    enum class Screen { LIST, DETAIL };
+    enum class Screen {
+    LIST,
+    DETAIL,
+    ADD_ENTRY,
+    QUESTIONNAIRE,
+    SUPPORT_MESSAGE
+    };
+
     Screen m_currentScreen;
+    // ── Add Entry form state ──────────────────────────────────
+int         m_activeField;    // which field is focused
+std::string m_inputPlace;
+std::string m_inputCity;
+std::string m_inputDate;
+std::string m_inputDesc;
+std::string m_inputCategory;
+std::string m_inputRating;
+std::string m_inputMood;
+std::string m_inputStatus;
+std::string m_inputPhoto;
+
+// ── Pre-trip check state ──────────────────────────────────
+PreTripCheck m_check;
+int          m_questionStep;  // 0-3, which question we're on
+    
 
     // ── Colors ───────────────────────────────────────────────
     sf::Color m_bgColor;
@@ -49,6 +73,14 @@ private:
 
     sf::Color getMoodColor(const std::string& mood);
     std::string wrapText(const std::string& text, int maxChars);
+
+    void drawAddEntryScreen();
+    void drawQuestionnaireScreen();
+    void drawSupportScreen();
+    void handleAddEntryInput(sf::Event& event);
+    void handleQuestionnaireInput(sf::Event& event);
+    void clearForm();
+    bool saveFormEntry();
 
 public:
     DiaryApp(Database& db);

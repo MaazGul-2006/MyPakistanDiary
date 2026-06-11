@@ -11,7 +11,9 @@ DiaryApp::DiaryApp(Database& db)
       m_db(db),
       m_selectedIndex(0),
       m_scrollOffset(0),
-      m_currentScreen(Screen::LIST)
+      m_currentScreen(Screen::LIST),
+      m_activeField(0),
+      m_questionStep(0)
 {
     m_window.setFramerateLimit(60);
 
@@ -30,7 +32,23 @@ DiaryApp::DiaryApp(Database& db)
 
     // Load entries from DB
     m_entries = m_db.getAllEntries();
+    clearForm();
 }
+    void DiaryApp::clearForm() {
+    m_inputPlace    = "";
+    m_inputCity     = "";
+    m_inputDate     = "";
+    m_inputDesc     = "";
+    m_inputCategory = "";
+    m_inputRating   = "3";
+    m_inputMood     = "Peaceful";
+    m_inputStatus   = "Visited";
+    m_inputPhoto    = "";
+    m_activeField   = 0;
+    m_questionStep  = 0;
+    m_check         = PreTripCheck();
+}
+
 
 // ── Main loop ─────────────────────────────────────────────────
 
@@ -69,6 +87,10 @@ void DiaryApp::handleEvents() {
                     m_currentScreen = Screen::DETAIL;
                 if (event.key.code == sf::Keyboard::Escape)
                     m_window.close();
+                if (event.key.code == sf::Keyboard::A) {
+                    clearForm();
+                    m_currentScreen = Screen::ADD_ENTRY;
+               }    
             }
             else if (m_currentScreen == Screen::DETAIL) {
                 if (event.key.code == sf::Keyboard::Escape ||
@@ -76,6 +98,22 @@ void DiaryApp::handleEvents() {
                     m_currentScreen = Screen::LIST;
             }
         }
+
+        else if (m_currentScreen == Screen::ADD_ENTRY) {
+           handleAddEntryInput(event);
+        }
+        else if (m_currentScreen == Screen::QUESTIONNAIRE) {
+           handleQuestionnaireInput(event);
+        }
+        else if (m_currentScreen == Screen::SUPPORT_MESSAGE) {
+        if (event.key.code == sf::Keyboard::Return ||
+           event.key.code == sf::Keyboard::Escape) {
+           // Save entry then go back to list
+           saveFormEntry();
+           m_entries = m_db.getAllEntries();
+           m_currentScreen = Screen::LIST;
+    }
+}
 
         // Mouse click on card
         if (event.type == sf::Event::MouseButtonPressed &&
@@ -109,12 +147,415 @@ void DiaryApp::render() {
 
     if (m_currentScreen == Screen::LIST)
         drawListScreen();
+    else if (m_currentScreen == Screen::ADD_ENTRY)
+        drawAddEntryScreen();
+    else if (m_currentScreen == Screen::QUESTIONNAIRE)
+        drawQuestionnaireScreen();
+    else if (m_currentScreen == Screen::SUPPORT_MESSAGE)
+        drawSupportScreen();    
     else
         drawDetailScreen();
 
     m_window.display();
 }
 
+
+// ── Input handler for Add Entry form ─────────────────────────
+
+void DiaryApp::handleAddEntryInput(sf::Event& event) {
+    if (event.type != sf::Event::KeyPressed &&
+        event.type != sf::Event::TextEntered) return;
+
+    // Pointer to active field string
+    std::string* fields[] = {
+        &m_inputPlace, &m_inputCity, &m_inputDate,
+        &m_inputDesc,  &m_inputCategory, &m_inputRating,
+        &m_inputMood,  &m_inputStatus,   &m_inputPhoto
+    };
+    int fieldCount = 9;
+
+    if (event.type == sf::Event::TextEntered) {
+        char c = (char)event.text.unicode;
+        // Backspace
+        if (event.text.unicode == 8) {
+            if (!fields[m_activeField]->empty())
+                fields[m_activeField]->pop_back();
+        }
+        // Printable ASCII
+        else if (c >= 32 && c < 127) {
+            *fields[m_activeField] += c;
+        }
+        return;
+    }
+
+    // Key events
+    if (event.key.code == sf::Keyboard::Tab) {
+        m_activeField = (m_activeField + 1) % fieldCount;
+    }
+    if (event.key.code == sf::Keyboard::Escape) {
+        m_currentScreen = Screen::LIST;
+    }
+    if (event.key.code == sf::Keyboard::Return) {
+        // Validate minimum fields
+        if (m_inputPlace.empty() || m_inputCity.empty() ||
+            m_inputDate.empty()) return;
+
+        if (m_inputStatus == "Planned") {
+            // Go to pre-trip questionnaire
+            m_check = PreTripCheck();
+            m_questionStep = 0;
+            m_currentScreen = Screen::QUESTIONNAIRE;
+        } else {
+            // Visited — save directly
+            saveFormEntry();
+            m_entries = m_db.getAllEntries();
+            m_currentScreen = Screen::LIST;
+        }
+    }
+}
+
+// ── Input handler for questionnaire ──────────────────────────
+
+void DiaryApp::handleQuestionnaireInput(sf::Event& event) {
+    if (event.type != sf::Event::KeyPressed) return;
+
+    if (event.key.code == sf::Keyboard::Escape) {
+        m_currentScreen = Screen::LIST;
+        return;
+    }
+
+    if (m_questionStep == 0) {
+        // Q1: traveling alone? Y/N
+        if (event.key.code == sf::Keyboard::Y)
+            m_check.travelingAlone = true;
+        else if (event.key.code == sf::Keyboard::N)
+            m_check.travelingAlone = false;
+        else return;
+        m_questionStep++;
+    }
+    else if (m_questionStep == 1) {
+        // Q2: feeling? 1-4
+        if (event.key.code == sf::Keyboard::Num1)
+            m_check.feelingScore = 1;
+        else if (event.key.code == sf::Keyboard::Num2)
+            m_check.feelingScore = 2;
+        else if (event.key.code == sf::Keyboard::Num3)
+            m_check.feelingScore = 3;
+        else if (event.key.code == sf::Keyboard::Num4)
+            m_check.feelingScore = 4;
+        else return;
+        m_questionStep++;
+    }
+    else if (m_questionStep == 2) {
+        // Q3: shared plans? Y/N
+        if (event.key.code == sf::Keyboard::Y)
+            m_check.sharedWithSomeone = true;
+        else if (event.key.code == sf::Keyboard::N)
+            m_check.sharedWithSomeone = false;
+        else return;
+        m_questionStep++;
+    }
+    else if (m_questionStep == 3) {
+        // Q4: energy? 1-3
+        if (event.key.code == sf::Keyboard::Num1)
+            m_check.energyLevel = 1;
+        else if (event.key.code == sf::Keyboard::Num2)
+            m_check.energyLevel = 2;
+        else if (event.key.code == sf::Keyboard::Num3)
+            m_check.energyLevel = 3;
+        else return;
+
+        // All answered — evaluate
+        m_check.evaluate();
+
+        if (m_check.flagged)
+            m_currentScreen = Screen::SUPPORT_MESSAGE;
+        else {
+            saveFormEntry();
+            m_entries = m_db.getAllEntries();
+            m_currentScreen = Screen::LIST;
+        }
+    }
+}
+
+// ── Save form to database ─────────────────────────────────────
+
+bool DiaryApp::saveFormEntry() {
+    float rating = 3.0f;
+    try { rating = std::stof(m_inputRating); }
+    catch (...) { rating = 3.0f; }
+    if (rating < 1.0f) rating = 1.0f;
+    if (rating > 5.0f) rating = 5.0f;
+
+    TravelEntry entry(
+        0,
+        m_inputPlace,
+        m_inputCity,
+        m_inputDate,
+        m_inputDesc,
+        m_inputCategory.empty() ? "General" : m_inputCategory,
+        rating,
+        m_inputMood.empty()   ? "Peaceful" : m_inputMood,
+        m_inputStatus.empty() ? "Visited"  : m_inputStatus,
+        m_inputPhoto,
+        false,
+        false
+    );
+    return m_db.insertEntry(entry);
+}
+
+// ── Draw Add Entry screen ─────────────────────────────────────
+
+void DiaryApp::drawAddEntryScreen() {
+    // Background card
+    sf::RectangleShape card(sf::Vector2f(860.f, 530.f));
+    card.setPosition(20.f, 75.f);
+    card.setFillColor(m_cardColor);
+    card.setOutlineThickness(1.f);
+    card.setOutlineColor(m_accentColor);
+    m_window.draw(card);
+
+    // Title
+    sf::Text title;
+    title.setFont(m_font);
+    title.setCharacterSize(20);
+    title.setFillColor(m_accentColor);
+    title.setString("+ Add New Travel Entry");
+    title.setPosition(40.f, 86.f);
+    m_window.draw(title);
+
+    // Field definitions
+    struct Field {
+        std::string label;
+        std::string hint;
+        std::string* value;
+    };
+
+    Field fields[] = {
+        { "Place",    "e.g. Shah Allah Ditta Caves", &m_inputPlace    },
+        { "City",     "e.g. Islamabad",              &m_inputCity     },
+        { "Date",     "YYYY-MM-DD",                  &m_inputDate     },
+        { "Notes",    "Your memory...",              &m_inputDesc     },
+        { "Category", "Historical/Religious/Nature", &m_inputCategory },
+        { "Rating",   "1.0 to 5.0",                 &m_inputRating   },
+        { "Mood",     "Peaceful/Joyful/Nostalgic...", &m_inputMood   },
+        { "Status",   "Visited / Planned",           &m_inputStatus   },
+        { "Photo",    "path/to/photo.jpg (optional)",&m_inputPhoto    },
+    };
+
+    float startY = 120.f;
+    float rowH   = 48.f;
+
+    for (int i = 0; i < 9; i++) {
+        bool active = (i == m_activeField);
+        float y = startY + i * rowH;
+
+        // Label
+        sf::Text lbl;
+        lbl.setFont(m_font);
+        lbl.setCharacterSize(13);
+        lbl.setFillColor(active ? m_accentColor : m_textSecondary);
+        lbl.setString(fields[i].label + ":");
+        lbl.setPosition(40.f, y);
+        m_window.draw(lbl);
+
+        // Input box
+        sf::RectangleShape box(sf::Vector2f(560.f, 26.f));
+        box.setPosition(180.f, y - 4.f);
+        box.setFillColor(sf::Color(40, 40, 55));
+        box.setOutlineThickness(active ? 1.5f : 0.5f);
+        box.setOutlineColor(active
+            ? m_accentColor
+            : sf::Color(60, 60, 80));
+        m_window.draw(box);
+
+        // Input text or hint
+        sf::Text val;
+        val.setFont(m_font);
+        val.setCharacterSize(13);
+        std::string display = *fields[i].value;
+        if (display.empty()) {
+            val.setFillColor(sf::Color(80, 80, 100));
+            display = fields[i].hint;
+        } else {
+            val.setFillColor(m_textPrimary);
+            // Cursor blink effect
+            if (active) display += "|";
+        }
+        val.setString(display);
+        val.setPosition(184.f, y);
+        m_window.draw(val);
+    }
+
+    // Instructions
+    sf::Text hint;
+    hint.setFont(m_font);
+    hint.setCharacterSize(12);
+    hint.setFillColor(m_textSecondary);
+    hint.setString(
+        "Tab = next field   "
+        "Enter = save   "
+        "Esc = cancel   "
+        "  NOTE: Status=Planned triggers wellness check");
+    hint.setPosition(40.f, 560.f);
+    m_window.draw(hint);
+}
+
+// ── Draw Questionnaire screen ─────────────────────────────────
+
+void DiaryApp::drawQuestionnaireScreen() {
+    sf::RectangleShape card(sf::Vector2f(700.f, 380.f));
+    card.setPosition(100.f, 120.f);
+    card.setFillColor(m_cardColor);
+    card.setOutlineThickness(1.5f);
+    card.setOutlineColor(sf::Color(0, 168, 107));
+    m_window.draw(card);
+
+    sf::Text title;
+    title.setFont(m_font);
+    title.setCharacterSize(18);
+    title.setFillColor(m_accentColor);
+    title.setString("Before you go — quick check-in");
+    title.setPosition(130.f, 136.f);
+    m_window.draw(title);
+
+    sf::Text sub;
+    sub.setFont(m_font);
+    sub.setCharacterSize(13);
+    sub.setFillColor(m_textSecondary);
+    sub.setString("Question " + std::to_string(m_questionStep + 1) + " of 4");
+    sub.setPosition(130.f, 164.f);
+    m_window.draw(sub);
+
+    // Divider
+    sf::RectangleShape div(sf::Vector2f(640.f, 1.f));
+    div.setFillColor(sf::Color(60, 60, 80));
+    div.setPosition(130.f, 184.f);
+    m_window.draw(div);
+
+    float qy = 204.f;
+    sf::Text question;
+    question.setFont(m_font);
+    question.setCharacterSize(16);
+    question.setFillColor(m_textPrimary);
+    question.setPosition(130.f, qy);
+
+    sf::Text options;
+    options.setFont(m_font);
+    options.setCharacterSize(14);
+    options.setFillColor(sf::Color(100, 220, 150));
+    options.setPosition(130.f, qy + 46.f);
+
+    if (m_questionStep == 0) {
+        question.setString("Are you traveling alone?");
+        options.setString("Y = Yes      N = No");
+    }
+    else if (m_questionStep == 1) {
+        question.setString("How are you feeling about this trip?");
+        options.setString(
+            "1 = Excited    2 = Nervous\n"
+            "3 = Need a break    4 = Unsure");
+    }
+    else if (m_questionStep == 2) {
+        question.setString("Does anyone know your travel plans?");
+        options.setString("Y = Yes      N = No");
+    }
+    else {
+        question.setString("How is your energy level today?");
+        options.setString("1 = Low      2 = Medium      3 = High");
+    }
+
+    m_window.draw(question);
+    m_window.draw(options);
+
+    sf::Text esc;
+    esc.setFont(m_font);
+    esc.setCharacterSize(12);
+    esc.setFillColor(m_textSecondary);
+    esc.setString("Esc = cancel and go back");
+    esc.setPosition(130.f, 460.f);
+    m_window.draw(esc);
+}
+
+// ── Draw Support Message screen ───────────────────────────────
+
+void DiaryApp::drawSupportScreen() {
+    // Soft warm card — not alarming
+    sf::RectangleShape card(sf::Vector2f(700.f, 340.f));
+    card.setPosition(100.f, 140.f);
+    card.setFillColor(sf::Color(30, 28, 40));
+    card.setOutlineThickness(1.5f);
+    card.setOutlineColor(sf::Color(180, 140, 255));
+    m_window.draw(card);
+
+    float ty = 162.f;
+    auto drawText = [&](const std::string& s,
+                        int size,
+                        sf::Color col,
+                        float indent = 0.f) {
+        sf::Text t;
+        t.setFont(m_font);
+        t.setCharacterSize(size);
+        t.setFillColor(col);
+        t.setString(s);
+        t.setPosition(130.f + indent, ty);
+        m_window.draw(t);
+        ty += size + 14.f;
+    };
+
+    drawText("Hey, a moment before you go.",
+             18, sf::Color(200, 180, 255));
+
+    ty += 10.f;
+
+    drawText("It sounds like you might be carrying",
+             14, m_textPrimary);
+    drawText("a lot right now. That's okay.",
+             14, m_textPrimary);
+
+    ty += 10.f;
+
+    drawText("Consider sharing your plans with",
+             14, m_textSecondary);
+    drawText("someone you trust before you leave.",
+             14, m_textSecondary);
+
+    ty += 14.f;
+
+    drawText("You are not alone.",
+             16, sf::Color(150, 255, 180));
+
+    ty += 10.f;
+
+    drawText("If you need to talk to someone:",
+             13, m_textSecondary);
+
+    // Helpline box
+    sf::RectangleShape hbox(sf::Vector2f(400.f, 36.f));
+    hbox.setPosition(130.f, ty);
+    hbox.setFillColor(sf::Color(40, 35, 60));
+    hbox.setOutlineThickness(1.f);
+    hbox.setOutlineColor(sf::Color(180, 140, 255));
+    m_window.draw(hbox);
+
+    sf::Text helpline;
+    helpline.setFont(m_font);
+    helpline.setCharacterSize(15);
+    helpline.setFillColor(sf::Color(200, 180, 255));
+    helpline.setString("Umang helpline: 0317-4288665");
+    helpline.setPosition(138.f, ty + 8.f);
+    m_window.draw(helpline);
+
+    ty += 56.f;
+
+    drawText("Your entry has been saved.",
+             13, sf::Color(100, 200, 130));
+
+    ty += 6.f;
+
+    drawText("Press Enter or Esc to continue.",
+             13, m_textSecondary);
+}
 // ── Header ────────────────────────────────────────────────────
 
 void DiaryApp::drawHeader() {
