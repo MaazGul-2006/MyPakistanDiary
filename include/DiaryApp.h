@@ -30,9 +30,9 @@ private:
     ADD_ENTRY,
     QUESTIONNAIRE,
     SUPPORT_MESSAGE
-    };
-
+};
     Screen m_currentScreen;
+
     // ── Add Entry form state ──────────────────────────────────
 int         m_activeField;    // which field is focused
 std::string m_inputPlace;
@@ -48,7 +48,6 @@ std::string m_inputPhoto;
 // ── Pre-trip check state ──────────────────────────────────
 PreTripCheck m_check;
 int          m_questionStep;  // 0-3, which question we're on
-    
 
     // ── Colors ───────────────────────────────────────────────
     sf::Color m_bgColor;
@@ -73,14 +72,13 @@ int          m_questionStep;  // 0-3, which question we're on
 
     sf::Color getMoodColor(const std::string& mood);
     std::string wrapText(const std::string& text, int maxChars);
-
     void drawAddEntryScreen();
-    void drawQuestionnaireScreen();
-    void drawSupportScreen();
-    void handleAddEntryInput(sf::Event& event);
-    void handleQuestionnaireInput(sf::Event& event);
-    void clearForm();
-    bool saveFormEntry();
+void drawQuestionnaireScreen();
+void drawSupportScreen();
+void handleAddEntryInput(sf::Event& event);
+void handleQuestionnaireInput(sf::Event& event);
+void clearForm();
+bool saveFormEntry();
 
 public:
     DiaryApp(Database& db);
