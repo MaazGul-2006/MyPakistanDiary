@@ -14,6 +14,7 @@ set(SOURCES
     src/Database.cpp
     src/DiaryApp.cpp
     src/main.cpp
+    src/HTMLExporter.cpp
 )
 
 include_directories(

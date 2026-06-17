@@ -5,6 +5,7 @@
 #include "TravelEntry.h"
 #include "Database.h"
 #include "PreTripCheck.h"
+#include "HTMLExporter.h"
 
 // ============================================================
 //  DiaryApp — SFML window and UI controller
@@ -24,12 +25,13 @@ private:
     int                       m_scrollOffset;
 
     // ── UI State ─────────────────────────────────────────────
-    enum class Screen {
+  enum class Screen {
     LIST,
     DETAIL,
     ADD_ENTRY,
     QUESTIONNAIRE,
-    SUPPORT_MESSAGE
+    SUPPORT_MESSAGE,
+    EXPORT_COMPLETE
 };
     Screen m_currentScreen;
 
@@ -56,12 +58,14 @@ int          m_questionStep;  // 0-3, which question we're on
     sf::Color m_accentColor;
     sf::Color m_textPrimary;
     sf::Color m_textSecondary;
+    // ── Export ──────────────────────────────────── 
+    HTMLExporter* m_exporter = nullptr;
 
     // ── Private methods ───────────────────────────────────────
     void handleEvents();
     void update();
     void render();
-
+    
     void drawListScreen();
     void drawDetailScreen();
     void drawHeader();
@@ -73,6 +77,7 @@ int          m_questionStep;  // 0-3, which question we're on
     sf::Color getMoodColor(const std::string& mood);
     std::string wrapText(const std::string& text, int maxChars);
     void drawAddEntryScreen();
+    void drawExportCompleteScreen();
 void drawQuestionnaireScreen();
 void drawSupportScreen();
 void handleAddEntryInput(sf::Event& event);
@@ -82,5 +87,6 @@ bool saveFormEntry();
 
 public:
     DiaryApp(Database& db);
+    ~DiaryApp() ;
     void run();
 };

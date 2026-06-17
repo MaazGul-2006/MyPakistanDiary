@@ -32,6 +32,7 @@ DiaryApp::DiaryApp(Database& db)
 
     // Load entries from DB
     m_entries = m_db.getAllEntries();
+    m_exporter = new HTMLExporter(m_db);
     clearForm();
 }
 
@@ -90,6 +91,10 @@ void DiaryApp::handleEvents() {
                     clearForm();
                     m_currentScreen = Screen::ADD_ENTRY;
                 }
+                if (event.key.code == sf::Keyboard::E) {
+                   m_exporter->exportToHTML(m_entries);
+                   m_currentScreen = Screen::EXPORT_COMPLETE;
+                }
             }
             else if (m_currentScreen == Screen::DETAIL) {
                 if (event.key.code == sf::Keyboard::Escape ||
@@ -110,6 +115,12 @@ void DiaryApp::handleEvents() {
                     m_currentScreen = Screen::LIST;
                 }
             }
+            else if (m_currentScreen == Screen::EXPORT_COMPLETE) {
+                if (event.type == sf::Event::KeyPressed &&
+                    event.key.code == sf::Keyboard::Return) {
+                    m_currentScreen = Screen::LIST;
+                }
+}
         }
 
         // Mouse click on card
@@ -145,11 +156,13 @@ void DiaryApp::render() {
     if (m_currentScreen == Screen::LIST)
         drawListScreen();
     else if (m_currentScreen == Screen::ADD_ENTRY)
-    drawAddEntryScreen();
-else if (m_currentScreen == Screen::QUESTIONNAIRE)
-    drawQuestionnaireScreen();
-else if (m_currentScreen == Screen::SUPPORT_MESSAGE)
-    drawSupportScreen();    
+        drawAddEntryScreen();
+    else if (m_currentScreen == Screen::QUESTIONNAIRE)
+        drawQuestionnaireScreen();
+    else if (m_currentScreen == Screen::SUPPORT_MESSAGE)
+        drawSupportScreen();    
+    else if (m_currentScreen == Screen::EXPORT_COMPLETE)
+        drawExportCompleteScreen();
     else
         drawDetailScreen();
 
@@ -912,4 +925,42 @@ void DiaryApp::drawSupportScreen() {
 
     drawText("Press Enter or Esc to continue.",
              13, m_textSecondary);
+}
+
+DiaryApp::~DiaryApp() {
+    if (m_exporter != nullptr) {
+        delete m_exporter;
+        m_exporter = nullptr;
+    }
+}
+
+void DiaryApp::drawExportCompleteScreen() {
+    sf::RectangleShape card(sf::Vector2f(700.f, 300.f));
+    card.setPosition(100.f, 160.f);
+    card.setFillColor(m_cardColor);
+    card.setOutlineThickness(1.5f);
+    card.setOutlineColor(sf::Color(100, 220, 130));
+    m_window.draw(card);
+
+    float ty = 182.f;
+    auto drawText = [&](const std::string& s, int size, sf::Color col) {
+        sf::Text t;
+        t.setFont(m_font);
+        t.setCharacterSize(size);
+        t.setFillColor(col);
+        t.setString(s);
+        t.setPosition(130.f, ty);
+        m_window.draw(t);
+        ty += size + 16.f;
+    };
+
+    drawText("Export Complete!", 22, sf::Color(100, 220, 130));
+    ty += 10.f;
+    drawText("Your travel diary has been saved as HTML.", 14, m_textPrimary);
+    drawText("Open export/travel_report.html in your browser.", 14, m_textPrimary);
+    ty += 10.f;
+    drawText("Share this file with friends for decentralized", 13, m_textSecondary);
+    drawText("community insights.", 13, m_textSecondary);
+
+    drawText("Press Enter to return to diary.", 13, m_textSecondary);
 }
