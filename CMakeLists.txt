@@ -13,8 +13,9 @@ set(SOURCES
     src/TravelEntry.cpp
     src/Database.cpp
     src/DiaryApp.cpp
-    src/main.cpp
+    src/PreTripCheck.cpp
     src/HTMLExporter.cpp
+    src/main.cpp
 )
 
 include_directories(
@@ -31,4 +32,4 @@ target_link_libraries(MyPakistanDiary
     ${SQLITE3_LIBRARIES}
 )
 
-target_compile_options(MyPakistanDiary PRIVATE -Wall -Wextra)
+target_compile_options(MyPakistanDiary PRIVATE -Wall -Wextra -Wpedantic)
