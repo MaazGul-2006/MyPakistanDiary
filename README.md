@@ -70,31 +70,57 @@ Aggregate community insights without a central server:
 
 ### File Structure
 MyPakistanDiary/
+
 ├── include/
+
 │   ├── TravelEntry.h        # Core data model
+
 │   ├── Database.h           # SQLite CRUD
+
 │   ├── DiaryApp.h           # SFML window & UI controller
+
 │   ├── PreTripCheck.h       # Wellness questionnaire
+
 │   └── HTMLExporter.h       # Report generation
+
 ├── src/
+
 │   ├── main.cpp             # Entry point
+
 │   ├── TravelEntry.cpp
+
 │   ├── Database.cpp
+
 │   ├── DiaryApp.cpp
+
 │   ├── PreTripCheck.cpp
+
 │   └── HTMLExporter.cpp
+
 ├── database/
+
 │   └── diary.db             # SQLite (auto-created)
+
 ├── assets/
+
 │   ├── fonts/               # DejaVuSans.ttf
+
 │   ├── icons/               # Future: mood sprites
+
 │   └── photos/              # User travel photos
+
 ├── export/
+
 │   └── travel_report.html   # Generated report
+
 ├── docs/
+
 │   └── screenshots/         # Portfolio evidence
+
 ├── CMakeLists.txt
+
 ├── README.md
+
 └── .gitignore
 
 ### Data Model
