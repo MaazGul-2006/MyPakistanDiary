@@ -18,6 +18,7 @@ private:
     // Helper methods
     std::string getColorForMood(const std::string& mood) const;
     std::string getCategoryEmoji(const std::string& category) const;
+    std::string copyPhotoToExport(const std::string& sourcePath) const;
 
 public:
     HTMLExporter(Database& db, const std::string& outputPath = "export/travel_report.html");

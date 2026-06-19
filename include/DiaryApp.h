@@ -31,7 +31,10 @@ private:
     ADD_ENTRY,
     QUESTIONNAIRE,
     SUPPORT_MESSAGE,
-    EXPORT_COMPLETE
+    EXPORT_COMPLETE,
+    EDIT_ENTRY,
+    DELETE_CONFIRM,
+    PHOTO_VIEW
 };
     Screen m_currentScreen;
 
@@ -61,6 +64,15 @@ int          m_questionStep;  // 0-3, which question we're on
     // ── Export ──────────────────────────────────── 
     HTMLExporter* m_exporter = nullptr;
 
+    // ── Photo display ────────────────────────────────────
+   sf::Texture      m_photoTexture;
+   sf::Sprite       m_photoSprite;
+   bool             m_photoLoaded;
+
+    // ── Edit/Delete state ────────────────────────────────
+    int         m_editingEntryId;    // which entry being edited (-1 = none)
+    bool        m_deleteConfirmed;
+
     // ── Private methods ───────────────────────────────────────
     void handleEvents();
     void update();
@@ -78,12 +90,18 @@ int          m_questionStep;  // 0-3, which question we're on
     std::string wrapText(const std::string& text, int maxChars);
     void drawAddEntryScreen();
     void drawExportCompleteScreen();
-void drawQuestionnaireScreen();
-void drawSupportScreen();
-void handleAddEntryInput(sf::Event& event);
-void handleQuestionnaireInput(sf::Event& event);
-void clearForm();
-bool saveFormEntry();
+    void drawQuestionnaireScreen();
+    void drawSupportScreen();
+    void drawEditEntryScreen();
+    void drawDeleteConfirmScreen();
+    void drawPhotoViewScreen();
+    void handleAddEntryInput(sf::Event& event);
+    void handleQuestionnaireInput(sf::Event& event);
+    void clearForm();
+    bool saveFormEntry();
+    void handleEditEntryInput(sf::Event& event);
+    void handleDeleteConfirmInput(sf::Event& event);
+    bool updateFormEntry();  // UPDATE not INSERT
 
 public:
     DiaryApp(Database& db);

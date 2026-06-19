@@ -2,6 +2,29 @@
 #include <iostream>
 #include <sstream>
 #include <iomanip>
+#include <fstream>
+#include <cstdlib>  // for system()
+#include <algorithm> 
+
+// Helper function to open file picker and return selected file path
+std::string openFilePickerForPhoto() {
+    // Uses zenity (standard on Ubuntu/Fedora)
+    // Alternative: could use other tools like kdialog, nautilus, etc.
+    
+    system("zenity --file-selection --filename=$HOME/Pictures/ "
+           "--title='Select Travel Photo' > /tmp/photo_path.txt 2>/dev/null");
+    
+    std::ifstream file("/tmp/photo_path.txt");
+    std::string path;
+    if (file.is_open()) {
+        std::getline(file, path);
+        file.close();
+        // Remove trailing newline
+        if (!path.empty() && path.back() == '\n')
+            path.pop_back();
+    }
+    return path;
+}
 
 // ── Constructor ───────────────────────────────────────────────
 
@@ -34,6 +57,8 @@ DiaryApp::DiaryApp(Database& db)
     m_entries = m_db.getAllEntries();
     m_exporter = new HTMLExporter(m_db);
     clearForm();
+    m_editingEntryId = -1;
+    m_deleteConfirmed = false;
 }
 
 void DiaryApp::clearForm() {
@@ -49,6 +74,8 @@ void DiaryApp::clearForm() {
     m_activeField   = 0;
     m_questionStep  = 0;
     m_check         = PreTripCheck();
+    m_editingEntryId = -1;
+    m_deleteConfirmed = false;
 }
 
 // ── Main loop ─────────────────────────────────────────────────
@@ -98,8 +125,35 @@ void DiaryApp::handleEvents() {
             }
             else if (m_currentScreen == Screen::DETAIL) {
                 if (event.key.code == sf::Keyboard::Escape ||
-                    event.key.code == sf::Keyboard::BackSpace)
-                    m_currentScreen = Screen::LIST;
+                   event.key.code == sf::Keyboard::BackSpace) {
+                   m_currentScreen = Screen::LIST;
+                }
+               if (event.key.code == sf::Keyboard::E) {
+                // Edit mode
+                  const TravelEntry& e = m_entries[m_selectedIndex];
+                  m_editingEntryId = e.getId();
+                  m_inputPlace = e.getPlace();
+                  m_inputCity = e.getCity();
+                  m_inputDate = e.getDate();
+                  m_inputDesc = e.getDescription();
+                  m_inputCategory = e.getCategory();
+                  m_inputRating = std::to_string((int)e.getRating());
+                  m_inputMood = e.getMood();
+                  m_inputStatus = e.getStatus();
+                  m_inputPhoto = e.getPhotoPath();
+                  m_activeField = 0;
+                  m_currentScreen = Screen::EDIT_ENTRY;
+                }
+               if (event.key.code == sf::Keyboard::D) {
+                // Delete confirmation
+                  m_deleteConfirmed = false;
+                  m_currentScreen = Screen::DELETE_CONFIRM;
+                }
+               if (event.key.code == sf::Keyboard::P && 
+                  !m_entries[m_selectedIndex].getPhotoPath().empty()) {
+                // View photo
+                   m_currentScreen = Screen::PHOTO_VIEW;
+                }
             }
             else if (m_currentScreen == Screen::ADD_ENTRY) {
                 handleAddEntryInput(event);
@@ -120,10 +174,21 @@ void DiaryApp::handleEvents() {
                     event.key.code == sf::Keyboard::Return) {
                     m_currentScreen = Screen::LIST;
                 }
-}
+            }
+        
+        else if (m_currentScreen == Screen::EDIT_ENTRY) {
+                handleEditEntryInput(event);
         }
-
-        // Mouse click on card
+        else if (m_currentScreen == Screen::DELETE_CONFIRM) {
+               handleDeleteConfirmInput(event);
+        }
+        else if (m_currentScreen == Screen::PHOTO_VIEW) {
+            if (event.key.code == sf::Keyboard::Escape ||
+               event.key.code == sf::Keyboard::Return) {
+               m_currentScreen = Screen::DETAIL;
+    }
+}
+       }       // Mouse click on card
         if (event.type == sf::Event::MouseButtonPressed &&
             m_currentScreen == Screen::LIST) {
             float mouseY = (float)event.mouseButton.y;
@@ -163,6 +228,12 @@ void DiaryApp::render() {
         drawSupportScreen();    
     else if (m_currentScreen == Screen::EXPORT_COMPLETE)
         drawExportCompleteScreen();
+    else if (m_currentScreen == Screen::EDIT_ENTRY)
+        drawEditEntryScreen();
+    else if (m_currentScreen == Screen::DELETE_CONFIRM)
+        drawDeleteConfirmScreen();
+    else if (m_currentScreen == Screen::PHOTO_VIEW)
+        drawPhotoViewScreen();
     else
         drawDetailScreen();
 
@@ -435,12 +506,58 @@ void DiaryApp::drawDetailScreen() {
 
     ty += 10.f;
 
-    // Photo path if exists
-    if (!e.getPhotoPath().empty()) {
-        drawLine("Photo:", e.getPhotoPath(),
-                 sf::Color(255, 200, 100));
-    }
+   // Photo display
+if (!e.getPhotoPath().empty()) {
+    // Try to load and display the photo
+    if (m_photoTexture.loadFromFile(e.getPhotoPath())) {
+        m_photoLoaded = true;
+        
+        // Photo box background
+        sf::RectangleShape photoBox(sf::Vector2f(400.f, 250.f));
+        photoBox.setPosition(tx, ty);
+        photoBox.setFillColor(sf::Color(20, 20, 30));
+        photoBox.setOutlineThickness(1.f);
+        photoBox.setOutlineColor(sf::Color(255, 200, 100));
+        m_window.draw(photoBox);
 
+        // Scale photo to fit box
+        m_photoSprite.setTexture(m_photoTexture, true);
+        float photoWidth = m_photoTexture.getSize().x;
+        float photoHeight = m_photoTexture.getSize().y;
+        float scaleX = 390.f / photoWidth;
+        float scaleY = 240.f / photoHeight;
+        float scale = std::min(scaleX, scaleY);
+        
+        m_photoSprite.setScale(scale, scale);
+        m_photoSprite.setPosition(
+            tx + (400.f - photoWidth * scale) / 2.f,
+            ty + (250.f - photoHeight * scale) / 2.f
+        );
+        m_window.draw(m_photoSprite);
+
+        ty += 260.f;
+
+        ty += 20.f;
+    } else {
+        // Photo file not found
+        sf::RectangleShape photoBox(sf::Vector2f(400.f, 80.f));
+        photoBox.setPosition(tx, ty);
+        photoBox.setFillColor(sf::Color(40, 20, 20));
+        photoBox.setOutlineThickness(1.f);
+        photoBox.setOutlineColor(sf::Color(220, 100, 100));
+        m_window.draw(photoBox);
+
+        sf::Text photoError;
+        photoError.setFont(m_font);
+        photoError.setCharacterSize(13);
+        photoError.setFillColor(sf::Color(220, 100, 100));
+        photoError.setString("Photo not found:\n" + e.getPhotoPath());
+        photoError.setPosition(tx + 10.f, ty + 10.f);
+        m_window.draw(photoError);
+
+        ty += 90.f;
+    }
+}
     // Discomfort flag
     if (e.getDiscomfortFlag()) {
         sf::Text flag;
@@ -458,7 +575,7 @@ void DiaryApp::drawDetailScreen() {
     back.setFont(m_font);
     back.setCharacterSize(13);
     back.setFillColor(m_textSecondary);
-    back.setString("Backspace or Esc — return to list");
+    back.setString("Esc/Backspace = back  |  E = edit  |  D = delete  |  P = photo");
     back.setPosition(tx, 574.f);
     m_window.draw(back);
 }
@@ -522,6 +639,19 @@ void DiaryApp::handleAddEntryInput(sf::Event& event) {
         &m_inputMood,  &m_inputStatus,   &m_inputPhoto
     };
     int fieldCount = 9;
+
+    // F to open file browser for photo
+    if (event.key.code == sf::Keyboard::F) {
+       if (m_activeField == 8) {  // Photo field is index 8
+          std::cout << "Opening file picker...\n";
+          std::string selectedPath = openFilePickerForPhoto();
+          if (!selectedPath.empty()) {
+              m_inputPhoto = selectedPath;
+            std::cout << "Photo selected: " << selectedPath << "\n";
+        }
+    }
+    return;
+}
 
     // Tab to next field
     if (event.key.code == sf::Keyboard::Tab) {
@@ -763,10 +893,8 @@ void DiaryApp::drawAddEntryScreen() {
     hint.setCharacterSize(12);
     hint.setFillColor(m_textSecondary);
     hint.setString(
-        "Tab = next field   "
-        "Enter = save   "
-        "Esc = cancel   "
-        "  NOTE: Status=Planned triggers wellness check");
+    "Tab = next field   Enter = save   Esc = cancel   "
+    "F (in Photo field) = browse files");
     hint.setPosition(40.f, 560.f);
     m_window.draw(hint);
 }
@@ -963,4 +1091,347 @@ void DiaryApp::drawExportCompleteScreen() {
     drawText("community insights.", 13, m_textSecondary);
 
     drawText("Press Enter to return to diary.", 13, m_textSecondary);
+}
+
+// ── Draw Edit Entry screen ────────────────────────────
+
+void DiaryApp::drawEditEntryScreen() {
+    // Reuse the same layout as ADD_ENTRY but with "Edit" title
+    sf::RectangleShape card(sf::Vector2f(860.f, 530.f));
+    card.setPosition(20.f, 75.f);
+    card.setFillColor(m_cardColor);
+    card.setOutlineThickness(1.f);
+    card.setOutlineColor(sf::Color(100, 200, 255));  // Blue for edit
+    m_window.draw(card);
+
+    // Title
+    sf::Text title;
+    title.setFont(m_font);
+    title.setCharacterSize(20);
+    title.setFillColor(sf::Color(100, 200, 255));
+    title.setString("✎ Edit Travel Entry");
+    title.setPosition(40.f, 86.f);
+    m_window.draw(title);
+
+    // Field definitions
+    struct Field {
+        std::string label;
+        std::string hint;
+        std::string* value;
+    };
+
+    Field fields[] = {
+        { "Place",    "e.g. Shah Allah Ditta Caves", &m_inputPlace    },
+        { "City",     "e.g. Islamabad",              &m_inputCity     },
+        { "Date",     "YYYY-MM-DD",                  &m_inputDate     },
+        { "Notes",    "Your memory...",              &m_inputDesc     },
+        { "Category", "Historical/Religious/Nature", &m_inputCategory },
+        { "Rating",   "1.0 to 5.0",                 &m_inputRating   },
+        { "Mood",     "Peaceful/Joyful/Nostalgic...", &m_inputMood   },
+        { "Status",   "Visited / Planned",           &m_inputStatus   },
+        { "Photo",    "path/to/photo.jpg (optional)",&m_inputPhoto    },
+    };
+
+    float startY = 120.f;
+    float rowH   = 48.f;
+
+    for (int i = 0; i < 9; i++) {
+        bool active = (i == m_activeField);
+        float y = startY + i * rowH;
+
+        // Label
+        sf::Text lbl;
+        lbl.setFont(m_font);
+        lbl.setCharacterSize(13);
+        lbl.setFillColor(active ? sf::Color(100, 200, 255) : m_textSecondary);
+        lbl.setString(fields[i].label + ":");
+        lbl.setPosition(40.f, y);
+        m_window.draw(lbl);
+
+        // Input box
+        sf::RectangleShape box(sf::Vector2f(560.f, 26.f));
+        box.setPosition(180.f, y - 4.f);
+        box.setFillColor(sf::Color(40, 40, 55));
+        box.setOutlineThickness(active ? 1.5f : 0.5f);
+        box.setOutlineColor(active
+            ? sf::Color(100, 200, 255)
+            : sf::Color(60, 60, 80));
+        m_window.draw(box);
+
+        // Input text or hint
+        sf::Text val;
+        val.setFont(m_font);
+        val.setCharacterSize(13);
+        std::string display = *fields[i].value;
+        if (display.empty()) {
+            val.setFillColor(sf::Color(80, 80, 100));
+            display = fields[i].hint;
+        } else {
+            val.setFillColor(m_textPrimary);
+            if (active) display += "|";
+        }
+        val.setString(display);
+        val.setPosition(184.f, y);
+        m_window.draw(val);
+    }
+
+   // Instructions
+    sf::Text hint;
+    hint.setFont(m_font);
+    hint.setCharacterSize(12);
+    hint.setFillColor(m_textSecondary);
+    hint.setString(
+    "Tab = next field   Enter = save   Esc = cancel   "
+    "F (in Photo field) = browse files");
+    hint.setPosition(40.f, 560.f);
+    m_window.draw(hint);
+}
+
+// ── Draw Delete Confirm screen ────────────────────────
+
+void DiaryApp::drawDeleteConfirmScreen() {
+    sf::RectangleShape card(sf::Vector2f(600.f, 280.f));
+    card.setPosition(150.f, 160.f);
+    card.setFillColor(m_cardColor);
+    card.setOutlineThickness(1.5f);
+    card.setOutlineColor(sf::Color(220, 50, 50));
+    m_window.draw(card);
+
+    float ty = 180.f;
+    auto drawText = [&](const std::string& s, int size, sf::Color col) {
+        sf::Text t;
+        t.setFont(m_font);
+        t.setCharacterSize(size);
+        t.setFillColor(col);
+        t.setString(s);
+        t.setPosition(170.f, ty);
+        m_window.draw(t);
+        ty += size + 18.f;
+    };
+
+    drawText("Delete Entry?", 20, sf::Color(220, 50, 50));
+    ty += 10.f;
+
+    const TravelEntry& e = m_entries[m_selectedIndex];
+    drawText(e.getPlace(), 16, m_textPrimary);
+
+    ty += 20.f;
+
+    drawText("This cannot be undone.", 13, m_textSecondary);
+
+    ty += 30.f;
+
+    drawText("Y = Delete     N = Cancel", 14, sf::Color(255, 200, 100));
+}
+
+// ── Draw Photo View screen ─────────────────────────────
+
+void DiaryApp::drawPhotoViewScreen() {
+    const TravelEntry& e = m_entries[m_selectedIndex];
+    std::string photoPath = e.getPhotoPath();
+
+    sf::RectangleShape card(sf::Vector2f(700.f, 480.f));
+    card.setPosition(100.f, 75.f);
+    card.setFillColor(m_cardColor);
+    card.setOutlineThickness(1.5f);
+    card.setOutlineColor(sf::Color(255, 200, 100));
+    m_window.draw(card);
+
+    float ty = 95.f;
+
+    // Title
+    sf::Text title;
+    title.setFont(m_font);
+    title.setCharacterSize(18);
+    title.setFillColor(sf::Color(255, 200, 100));
+    title.setString("Photo: " + e.getPlace());
+    title.setPosition(130.f, ty);
+    m_window.draw(title);
+
+    ty += 40.f;
+
+    // Photo path info
+    sf::Text pathLabel;
+    pathLabel.setFont(m_font);
+    pathLabel.setCharacterSize(12);
+    pathLabel.setFillColor(m_textSecondary);
+    pathLabel.setString("File path:");
+    pathLabel.setPosition(130.f, ty);
+    m_window.draw(pathLabel);
+
+    ty += 20.f;
+
+    sf::Text pathValue;
+    pathValue.setFont(m_font);
+    pathValue.setCharacterSize(13);
+    pathValue.setFillColor(sf::Color(100, 200, 255));
+    pathValue.setString(photoPath);
+    pathValue.setPosition(130.f, ty);
+    m_window.draw(pathValue);
+
+    ty += 40.f;
+
+    // Status message
+    sf::Text info;
+    info.setFont(m_font);
+    info.setCharacterSize(13);
+    info.setFillColor(m_textSecondary);
+    info.setString(
+        "To view the photo, open the file at the path above\n"
+        "in your image viewer or file manager.\n\n"
+        "In a future update, photos will preview here.");
+    info.setPosition(130.f, ty);
+    m_window.draw(info);
+
+    ty += 120.f;
+
+    // Instructions
+    sf::Text hint;
+    hint.setFont(m_font);
+    hint.setCharacterSize(13);
+    hint.setFillColor(m_textSecondary);
+    hint.setString("Press Esc or Enter to go back");
+    hint.setPosition(130.f, ty);
+    m_window.draw(hint);
+}
+
+// ── Input handler for Edit Entry form ─────────────────
+
+void DiaryApp::handleEditEntryInput(sf::Event& event) {
+    if (event.type != sf::Event::KeyPressed) return;
+
+    // DEBUG
+    std::cout << "Edit form key: " << event.key.code << "\n";
+
+    std::string* fields[] = {
+        &m_inputPlace, &m_inputCity, &m_inputDate,
+        &m_inputDesc,  &m_inputCategory, &m_inputRating,
+        &m_inputMood,  &m_inputStatus,   &m_inputPhoto
+    };
+    int fieldCount = 9;
+
+    // F to open file browser for photo
+if (event.key.code == sf::Keyboard::F) {
+    if (m_activeField == 8) {  // Photo field is index 8
+        std::cout << "Opening file picker...\n";
+        std::string selectedPath = openFilePickerForPhoto();
+        if (!selectedPath.empty()) {
+            m_inputPhoto = selectedPath;
+            std::cout << "Photo selected: " << selectedPath << "\n";
+        }
+    }
+    return;
+}
+
+    // Tab to next field
+    if (event.key.code == sf::Keyboard::Tab) {
+        std::cout << "TAB pressed\n";
+        m_activeField = (m_activeField + 1) % fieldCount;
+        return;
+    }
+
+    // Escape to cancel
+    if (event.key.code == sf::Keyboard::Escape) {
+        
+        m_currentScreen = Screen::DETAIL;
+        clearForm();
+        return;
+    }
+
+    // Backspace to delete
+    if (event.key.code == sf::Keyboard::BackSpace) {
+        if (!fields[m_activeField]->empty())
+            fields[m_activeField]->pop_back();
+        return;
+    }
+
+    // Enter to save
+    if (event.key.code == sf::Keyboard::Return) {
+        if (m_inputPlace.empty() || m_inputCity.empty() || m_inputDate.empty()) {
+            std::cout << "Error: Place, City, and Date required.\n";
+            return;
+        }
+
+        bool success = updateFormEntry();
+        std::cout << (success ? "Entry updated.\n" : "Update failed.\n");
+        m_entries = m_db.getAllEntries();
+        clearForm();
+        m_currentScreen = Screen::DETAIL;
+        return;
+    }
+
+    // Character input
+    char c = '\0';
+    if (event.key.code >= sf::Keyboard::A && event.key.code <= sf::Keyboard::Z) {
+        c = event.key.shift ? 'A' + (event.key.code - sf::Keyboard::A)
+                            : 'a' + (event.key.code - sf::Keyboard::A);
+    }
+    else if (event.key.code >= sf::Keyboard::Num0 && event.key.code <= sf::Keyboard::Num9) {
+        c = '0' + (event.key.code - sf::Keyboard::Num0);
+    }
+    else if (event.key.code == sf::Keyboard::Space) c = ' ';
+    else if (event.key.code == sf::Keyboard::Period) c = '.';
+    else if (event.key.code == sf::Keyboard::Comma) c = ',';
+    else if (event.key.code == sf::Keyboard::Slash) c = '/';
+    else if (event.key.code == sf::Keyboard::Hyphen) c = '-';
+    else if (event.key.code == sf::Keyboard::Equal) c = '=';
+
+    if (c != '\0') {
+        *fields[m_activeField] += c;
+    }
+}
+
+// ── Input handler for Delete Confirm ──────────────────
+
+void DiaryApp::handleDeleteConfirmInput(sf::Event& event) {
+    if (event.type != sf::Event::KeyPressed) return;
+
+    // Get the key code as lowercase letter
+    sf::Keyboard::Key key = event.key.code;
+    
+    if (key == sf::Keyboard::Y) {
+        // Delete confirmed
+        int entryId = m_entries[m_selectedIndex].getId();
+        bool success = m_db.deleteEntry(entryId);
+        std::cout << (success ? "Entry deleted.\n" : "Delete failed.\n");
+        m_entries = m_db.getAllEntries();
+        
+        if (!m_entries.empty()) {
+            if (m_selectedIndex >= (int)m_entries.size())
+                m_selectedIndex = m_entries.size() - 1;
+        }
+        
+        clearForm();
+        m_currentScreen = Screen::LIST;
+    }
+    else if (key == sf::Keyboard::N) {
+        // Cancel
+        m_currentScreen = Screen::DETAIL;
+    }
+}
+
+// ── Update entry in database ──────────────────────────
+
+bool DiaryApp::updateFormEntry() {
+    float rating = 3.0f;
+    try { rating = std::stof(m_inputRating); }
+    catch (...) { rating = 3.0f; }
+    if (rating < 1.0f) rating = 1.0f;
+    if (rating > 5.0f) rating = 5.0f;
+
+    TravelEntry entry(
+        m_editingEntryId,  // Use existing ID
+        m_inputPlace,
+        m_inputCity,
+        m_inputDate,
+        m_inputDesc,
+        m_inputCategory.empty() ? "General" : m_inputCategory,
+        rating,
+        m_inputMood.empty()   ? "Peaceful" : m_inputMood,
+        m_inputStatus.empty() ? "Visited"  : m_inputStatus,
+        m_inputPhoto,
+        false,
+        false
+    );
+    return m_db.updateEntry(entry);  // UPDATE, not INSERT
 }

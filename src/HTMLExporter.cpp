@@ -4,10 +4,10 @@
 #include <iostream>
 #include <iomanip>
 
-HTMLExporter::HTMLExporter(Database& db, const std::string& outputPath)
-    : m_db(db), m_outputPath(outputPath) {}
-
 bool HTMLExporter::exportToHTML(const std::vector<TravelEntry>& entries) {
+    // Create export directory if it doesn't exist
+    system("mkdir -p export 2>/dev/null");
+    
     std::ofstream file(m_outputPath);
     if (!file.is_open()) {
         std::cerr << "Cannot open file for writing: " << m_outputPath << "\n";
@@ -25,7 +25,52 @@ bool HTMLExporter::exportToHTML(const std::vector<TravelEntry>& entries) {
 
     file.close();
     std::cout << "HTML report generated: " << m_outputPath << "\n";
+    std::cout << "Photos copied to export/ folder\n";
     return true;
+}
+
+HTMLExporter::HTMLExporter(Database& db, const std::string& outputPath)
+    : m_db(db), m_outputPath(outputPath) {}
+
+// Helper to escape HTML special characters
+static std::string escapeHTML(const std::string& text) {
+    std::string result;
+    for (char c : text) {
+        switch (c) {
+            case '&': result += "&amp;"; break;
+            case '<': result += "&lt;"; break;
+            case '>': result += "&gt;"; break;
+            case '"': result += "&quot;"; break;
+            case '\'': result += "&#39;"; break;
+            default: result += c;
+        }
+    }
+    return result;
+}
+
+std::string HTMLExporter::copyPhotoToExport(const std::string& sourcePath) const {
+    if (sourcePath.empty()) return "";
+    
+    // Get just the filename
+    size_t lastSlash = sourcePath.find_last_of("/\\");
+    std::string filename = (lastSlash == std::string::npos) 
+                           ? sourcePath 
+                           : sourcePath.substr(lastSlash + 1);
+    
+    // Destination in export folder
+    std::string destPath = "export/" + filename;
+    
+    // Use cp -f to force copy (works for JPEG, PNG, etc)
+    std::string cmd = "cp -f \"" + sourcePath + "\" \"" + destPath + "\" 2>/dev/null";
+    int result = system(cmd.c_str());
+    
+    if (result == 0) {
+        std::cout << "Photo copied: " << filename << "\n";
+        return filename;  
+    }
+    
+    std::cout << "Photo copy failed: " << sourcePath << "\n";
+    return "";
 }
 
 std::string HTMLExporter::generateHeader() const {
@@ -177,6 +222,16 @@ std::string HTMLExporter::generateHeader() const {
             font-style: italic;
             border-left: 3px solid #64b4ff;
         }
+        img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        article img {
+            margin: 20px 0;
+        }
 
         .crowd-section {
             background: rgba(10, 107, 63, 0.15);
@@ -250,12 +305,12 @@ std::string HTMLExporter::generateEntryCard(const TravelEntry& entry) const {
     std::ostringstream oss;
     
     oss << R"(        <article class="entry">
-            <h2>)" << entry.getPlace() << R"(</h2>
+            <h2>)" << escapeHTML(entry.getPlace()) << R"(</h2>
             
             <div class="entry-meta">
                 <div class="meta-item">
                     <div class="meta-label">City</div>
-                    <div class="meta-value">)" << entry.getCity() << R"(</div>
+                    <div class="meta-value">)" << escapeHTML(entry.getCity()) << R"(</div>
                 </div>
                 
                 <div class="meta-item">
@@ -277,13 +332,34 @@ std::string HTMLExporter::generateEntryCard(const TravelEntry& entry) const {
             </div>
             
             <div style="margin-bottom: 15px;">
-                <span class="category">)" << entry.getCategory() << R"(</span>
+                <span class="category">)" << escapeHTML(entry.getCategory()) << R"(</span>
                 <span class="status )" << (entry.getStatus() == "Visited" ? "visited" : "planned") 
         << R"(">)" << entry.getStatus() << R"(</span>
             </div>
-            
-            <div class="description">
-                )" << entry.getDescription() << R"(
+)";
+
+    // Add photo if it exists
+    if (!entry.getPhotoPath().empty()) {
+        std::string copiedFilename = copyPhotoToExport(entry.getPhotoPath());
+        
+        if (!copiedFilename.empty()) {
+            oss << R"(            <div style="margin: 30px 0; padding: 20px; background: rgba(0, 168, 107, 0.1); border-radius: 8px; border: 2px solid rgba(0,168,107,0.3);">
+                <p style="font-size: 0.9em; color: #64dc82; margin-bottom: 15px;">
+                    <strong>📷 Photo</strong>
+                </p>
+                <img src=")" << copiedFilename << R"(" 
+                     alt="Photo of )" << escapeHTML(entry.getPlace()) << R"("
+                     style="max-width: 100%; max-height: 600px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);">
+                <p style="font-size: 0.8em; color: #a0a0b4; margin-top: 10px;">
+                    )" << copiedFilename << R"(
+                </p>
+            </div>
+)";
+        }
+    }
+
+    oss << R"(            <div class="description">
+                )" << escapeHTML(entry.getDescription()) << R"(
             </div>
         </article>
 )";
