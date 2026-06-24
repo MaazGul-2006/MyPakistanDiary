@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include "City.h"
 #include "TravelEntry.h"
 #include <sqlite3.h>
 
@@ -46,4 +47,10 @@ public:
     float       getAverageRating(const std::string& place);
     int         getVisitCount(const std::string& city);
     std::string getMostCommonMood(const std::string& city);
+
+    // City operations ──────────────────────────────────────────
+    bool                insertCity(const City& city);
+    City                getCityByName(const std::string& name);
+    std::vector<City>   getAllCities();
+
 };

@@ -119,7 +119,9 @@ void DiaryApp::handleEvents() {
                     m_currentScreen = Screen::ADD_ENTRY;
                 }
                 if (event.key.code == sf::Keyboard::E) {
-                   m_exporter->exportToHTML(m_entries);
+                   
+                   std::vector<City> cities = m_db.getAllCities();
+                   m_exporter->exportToHTML(m_entries, cities);
                    m_currentScreen = Screen::EXPORT_COMPLETE;
                 }
             }

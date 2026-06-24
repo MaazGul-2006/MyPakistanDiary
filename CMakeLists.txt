@@ -12,6 +12,7 @@ pkg_check_modules(SQLITE3 REQUIRED sqlite3)
 set(SOURCES
     src/TravelEntry.cpp
     src/Database.cpp
+    src/City.cpp
     src/DiaryApp.cpp
     src/PreTripCheck.cpp
     src/HTMLExporter.cpp

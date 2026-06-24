@@ -12,6 +12,13 @@
 
 class HTMLExporter {
 private:
+    std::string generateCitySection(const City& city, 
+                                   const std::vector<TravelEntry>& entries) const;
+
+public:
+    bool exportToHTML(const std::vector<TravelEntry>& entries,
+                     const std::vector<City>& cities);
+private:
     Database& m_db;
     std::string m_outputPath;
 

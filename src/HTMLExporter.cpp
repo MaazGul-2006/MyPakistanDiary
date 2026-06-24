@@ -4,8 +4,7 @@
 #include <iostream>
 #include <iomanip>
 
-bool HTMLExporter::exportToHTML(const std::vector<TravelEntry>& entries) {
-    // Create export directory if it doesn't exist
+bool HTMLExporter::exportToHTML(const std::vector<TravelEntry>& entries, const std::vector<City>& cities) {
     system("mkdir -p export 2>/dev/null");
     
     std::ofstream file(m_outputPath);
@@ -16,16 +15,25 @@ bool HTMLExporter::exportToHTML(const std::vector<TravelEntry>& entries) {
 
     file << generateHeader();
 
-    for (const auto& entry : entries) {
-        file << generateEntryCard(entry);
+    // Group entries by city
+    for (const auto& city : cities) {
+        std::vector<TravelEntry> cityEntries;
+        for (const auto& entry : entries) {
+            if (entry.getCity() == city.getName()) {
+                cityEntries.push_back(entry);
+            }
+        }
+        
+        if (!cityEntries.empty()) {
+            file << generateCitySection(city, cityEntries);
+        }
     }
 
     file << generateCrowdWisdom();
     file << generateFooter();
 
     file.close();
-    std::cout << "HTML report generated: " << m_outputPath << "\n";
-    std::cout << "Photos copied to export/ folder\n";
+    std::cout << "HTML report generated with city sections\n";
     return true;
 }
 
@@ -293,6 +301,64 @@ std::string HTMLExporter::generateHeader() const {
             body {
                 padding: 10px;
             }
+            .city-section {
+            margin: 60px 0;
+            padding: 40px;
+            background: linear-gradient(135deg, rgba(10, 107, 63, 0.1) 0%, rgba(20, 60, 80, 0.1) 100%);
+            border-radius: 12px;
+            border-left: 5px solid #0a6b3f;
+        }
+
+        .city-header {
+            margin-bottom: 30px;
+        }
+
+        .city-header h2 {
+            font-size: 2.5em;
+            color: #00a86d;
+            margin-bottom: 10px;
+        }
+
+        .city-description {
+            font-size: 1.1em;
+            color: #c0c0d0;
+            line-height: 1.6;
+        }
+
+        .city-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .info-box {
+            background: rgba(30, 30, 42, 0.8);
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 3px solid #0a6b3f;
+        }
+
+        .info-box h4 {
+            color: #64dc82;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .info-box p {
+            color: #a0a0b4;
+            line-height: 1.6;
+        }
+
+        .city-entries {
+            margin-top: 40px;
+        }
+
+        .city-entries h3 {
+            color: #64b4ff;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }    
         }
     </style>
 </head>
@@ -432,4 +498,46 @@ std::string HTMLExporter::getCategoryEmoji(const std::string& category) const {
     if (category == "Nature")      return "🏔️";
     if (category == "Recreation")  return "🎡";
     return "📍";
+}
+
+std::string HTMLExporter::generateCitySection(const City& city,
+                                             const std::vector<TravelEntry>& entries) const {
+    std::ostringstream oss;
+    
+    oss << R"(        <section class="city-section">
+            <div class="city-header">
+                <h2>)" << city.getName() << R"(</h2>
+                <p class="city-description">)" << escapeHTML(city.getDescription()) << R"(</p>
+            </div>
+            
+            <div class="city-info">
+                <div class="info-box">
+                    <h4>Best Time to Visit</h4>
+                    <p>)" << escapeHTML(city.getBestTime()) << R"(</p>
+                </div>
+                
+                <div class="info-box">
+                    <h4>Safety Information</h4>
+                    <p>)" << escapeHTML(city.getSafetyInfo()) << R"(</p>
+                </div>
+                
+                <div class="info-box">
+                    <h4>Traveler Tips</h4>
+                    <p>)" << escapeHTML(city.getTravelTips()) << R"(</p>
+                </div>
+            </div>
+            
+            <div class="city-entries">
+                <h3>My Experiences in )" << city.getName() << R"(</h3>
+)";
+
+    for (const auto& entry : entries) {
+        oss << generateEntryCard(entry);
+    }
+    
+    oss << R"(            </div>
+        </section>
+)";
+    
+    return oss.str();
 }

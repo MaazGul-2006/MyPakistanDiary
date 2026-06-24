@@ -51,7 +51,8 @@ bool Database::executeSQL(const std::string& sql) {
 // ── Schema ────────────────────────────────────────────────────
 
 bool Database::createTable() {
-    std::string sql = R"(
+    // Existing travel_entries table
+    std::string sql1 = R"(
         CREATE TABLE IF NOT EXISTS travel_entries (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             place           TEXT    NOT NULL,
@@ -67,11 +68,26 @@ bool Database::createTable() {
             discomfort_flag INTEGER DEFAULT 0
         );
     )";
-    if (executeSQL(sql)) {
-        std::cout << "Table ready.\n";
-        return true;
-    }
-    return false;
+    
+    // New cities table
+    std::string sql2 = R"(
+        CREATE TABLE IF NOT EXISTS cities (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            name            TEXT    UNIQUE NOT NULL,
+            description     TEXT,
+            best_time       TEXT,
+            safety_info     TEXT,
+            travel_tips     TEXT,
+            latitude        REAL,
+            longitude       REAL
+        );
+    )";
+    
+    if (!executeSQL(sql1)) return false;
+    if (!executeSQL(sql2)) return false;
+    
+    std::cout << "Tables ready.\n";
+    return true;
 }
 
 // ── INSERT ────────────────────────────────────────────────────
@@ -294,4 +310,73 @@ std::string Database::getMostCommonMood(const std::string& city) {
     }
     sqlite3_finalize(stmt);
     return mood;
+}
+
+bool Database::insertCity(const City& city) {
+    std::string sql = R"(
+        INSERT OR REPLACE INTO cities (name, description, best_time, safety_info, travel_tips, latitude, longitude)
+        VALUES (?, ?, ?, ?, ?, ?, ?);
+    )";
+    
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
+    
+    sqlite3_bind_text(stmt, 1, city.getName().c_str(),         -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, city.getDescription().c_str(),  -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, city.getBestTime().c_str(),     -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, city.getSafetyInfo().c_str(),   -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 5, city.getTravelTips().c_str(),   -1, SQLITE_STATIC);
+    sqlite3_bind_double(stmt, 6, city.getLatitude());
+    sqlite3_bind_double(stmt, 7, city.getLongitude());
+    
+    int result = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    
+    return result == SQLITE_DONE;
+}
+
+City Database::getCityByName(const std::string& name) {
+    std::string sql = "SELECT * FROM cities WHERE name = ?;";
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
+    sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_STATIC);
+    
+    City city;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+        city = City(
+            sqlite3_column_int(stmt,    0),  // id
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1))),  // name
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2))),  // description
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))),  // bestTime
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4))),  // safetyInfo
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5))),  // travelTips
+            (float)sqlite3_column_double(stmt, 6),  // latitude
+            (float)sqlite3_column_double(stmt, 7)   // longitude
+        );
+    }
+    sqlite3_finalize(stmt);
+    return city;
+}
+
+std::vector<City> Database::getAllCities() {
+    std::vector<City> cities;
+    std::string sql = "SELECT * FROM cities ORDER BY name;";
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
+    
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        City city(
+            sqlite3_column_int(stmt,    0),
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1))),
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2))),
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3))),
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4))),
+            std::string(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5))),
+            (float)sqlite3_column_double(stmt, 6),
+            (float)sqlite3_column_double(stmt, 7)
+        );
+        cities.push_back(city);
+    }
+    sqlite3_finalize(stmt);
+    return cities;
 }
