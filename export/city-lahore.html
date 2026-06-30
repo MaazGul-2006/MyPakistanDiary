@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lahore - My Pakistan Travel Diary</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="navbar-brand">🇵🇰 My Pakistan Travel Diary</a>
+        <div class="navbar-nav">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="cities.html" class="nav-link">All Cities</a>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        </div>
+    </nav>
+
+    <section class="city-section">
+        <div class="container">
+            <div class="city-header">
+                <h2>Lahore</h2>
+                <p class="city-description">Cultural heart of Pakistan...</p>
+            </div>
+            
+            <div class="city-info">
+                <div class="info-box">
+                    <h4>📅 Best Time to Visit</h4>
+                    <p>October to March</p>
+                </div>
+                <div class="info-box">
+                    <h4>🛡️ Safety Information</h4>
+                    <p>Lively atmosphere...</p>
+                </div>
+                <div class="info-box">
+                    <h4>✈️ Traveler Tips</h4>
+                    <p>Explore Shahi Qila...</p>
+                </div>
+            </div>
+            
+            <div class="map-container" id="map"></div>
+            
+            <div class="entries-section">
+                <h3>My Travel Experiences in Lahore</h3>
+                
+            <div class="entry-card">
+                <h4>Top Spin , Joy land</h4>
+                <div class="entry-meta">
+                    <span class="meta-tag">📅 2024-12-25</span>
+                    <span class="mood-badge" style="background-color: #FFA500;">Joyful</span>
+                    <span class="meta-tag">⭐ 5.0/5</span>
+                    <span class="meta-tag">Recreation</span>
+                </div>
+                <p class="entry-description">"Epic Lahore trip! Sheesh Mahal was the highlight. Joyland Top Spin ride was a rush."</p>
+                <img src="photos/WhatsApp Image 2026-06-19 at 5.57.11 PM.jpeg" alt="Top Spin , Joy land" class="entry-photo">
+            </div>
+            
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p><strong>My Pakistan Travel Diary</strong></p>
+        <p>Exploring Lahore - one journey at a time</p>
+        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
+            📍 <strong>Coordinates:</strong> 31.5497°N, 74.3436°E
+        </p>
+    </footer>
+
+    <script>
+        // Initialize OpenStreetMap with Leaflet
+        function initMap() {
+            const map = L.map('map').setView([31.549699783325195, 74.34359741210938], 12);
+            
+            // OpenStreetMap tile layer (completely free)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 18,
+                className: 'leaflet-tile'
+            }).addTo(map);
+            
+            // Add marker for the city
+            L.marker([31.549699783325195, 74.34359741210938], {
+                title: 'Lahore'
+            }).addTo(map).bindPopup('<b>Lahore</b><br>Your travel destination').openPopup();
+        }
+        
+        // Initialize map when page loads
+        window.addEventListener('load', initMap);
+        
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                button.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark-mode');
+                button.textContent = '☀️ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Load saved theme on page load
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
+        }
+    </script>
+</body>
+</html>

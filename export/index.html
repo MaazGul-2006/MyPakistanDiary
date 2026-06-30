@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Pakistan Travel Diary - Explore Pakistan's Hidden Gems</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="navbar-brand">🇵🇰 My Pakistan Travel Diary</a>
+        <div class="navbar-nav">
+            <a href="cities.html" class="nav-link">All Cities</a>
+            <a href="#cities" class="nav-link">Explore</a>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Discover Pakistan's Hidden Gems</h1>
+        <p>A personal journey through Pakistan's most beautiful destinations</p>
+    </section>
+
+    <section class="container">
+        <h2 style="text-align: center; margin: 3rem 0; color: var(--color-primary-light); font-size: 2rem;">
+            Featured Destinations
+        </h2>
+        <div class="grid" id="cities">
+            
+            <div class="card">
+                <h3>Islamabad</h3>
+                <p>Pakistan's capital......</p>
+                <p><strong>📅 Best Time:</strong> October to March</p>
+                <a href="city-islamabad.html">
+                   Explore Islamabad →
+                </a>
+            </div>
+            
+            <div class="card">
+                <h3>Lahore</h3>
+                <p>Cultural heart of Pakistan......</p>
+                <p><strong>📅 Best Time:</strong> October to March</p>
+                <a href="city-lahore.html">
+                   Explore Lahore →
+                </a>
+            </div>
+            
+            <div class="card">
+                <h3>Murree</h3>
+                <p>Hill station......</p>
+                <p><strong>📅 Best Time:</strong> March to October</p>
+                <a href="city-murree.html">
+                   Explore Murree →
+                </a>
+            </div>
+            
+            <div class="card">
+                <h3>Rawalpindi</h3>
+                <p>Historic city with military heritage and modern infrastructure....</p>
+                <p><strong>📅 Best Time:</strong> September to April</p>
+                <a href="city-rawalpindi.html">
+                   Explore Rawalpindi →
+                </a>
+            </div>
+            
+            <div class="card">
+                <h3>Taxila</h3>
+                <p>Ancient UNESCO World Heritage Site. Home to Buddhist monasteries and Greco-Buddhist art from 5th century BC....</p>
+                <p><strong>📅 Best Time:</strong> October to April</p>
+                <a href="city-taxila.html">
+                   Explore Taxila →
+                </a>
+            </div>
+            
+        </div>
+    </section>
+
+    <footer>
+        <p><strong>My Pakistan Travel Diary</strong></p>
+        <p>🌍 Celebrating Pakistan's beauty, culture, and adventure</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+            📸 Real memories • 🗺️ Travel guides • 💚 Promote tourism
+        </p>
+        <p style="margin-top: 1rem; color: rgba(255,255,255,0.9); font-size: 0.85rem;">
+            Mental Wellness Support: Umang helpline <strong>0317-4288665</strong>
+        </p>
+    </footer>
+
+    <script>
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                button.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark-mode');
+                button.textContent = '☀️ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        // Load saved theme on page load
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
+        }
+    </script>
+</body>
+</html>
