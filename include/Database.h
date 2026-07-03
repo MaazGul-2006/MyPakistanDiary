@@ -53,4 +53,18 @@ public:
     City                getCityByName(const std::string& name);
     std::vector<City>   getAllCities();
 
+    public:
+    // Add to public section of Database class:
+
+// Video operations
+bool insertVideo(const std::string& city, const std::string& youtubeUrl, const std::string& title);
+// In Database.h
+std::vector<std::pair<std::string, std::string>> getVideosByCity(const std::string& city);
+
+// Media coverage operations
+bool insertMediaCoverage(const std::string& city, const std::string& title, 
+                        const std::string& url, const std::string& sourceType, 
+                        const std::string& sourceName);
+std::vector<std::tuple<std::string, std::string, std::string, std::string>> 
+getMediaByCity(const std::string& city);
 };

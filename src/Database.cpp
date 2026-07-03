@@ -51,6 +51,28 @@ bool Database::executeSQL(const std::string& sql) {
 // ── Schema ────────────────────────────────────────────────────
 
 bool Database::createTable() {
+    std::string sql3 = R"(
+    CREATE TABLE IF NOT EXISTS videos (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        city            TEXT    NOT NULL,
+        youtube_url     TEXT    NOT NULL,
+        title           TEXT
+    );
+)";
+
+std::string sql4 = R"(
+    CREATE TABLE IF NOT EXISTS media_coverage (
+        id              INTEGER PRIMARY KEY AUTOINCREMENT,
+        city            TEXT    NOT NULL,
+        title           TEXT    NOT NULL,
+        url             TEXT    NOT NULL,
+        source_type     TEXT,
+        source_name     TEXT
+    );
+)";
+
+executeSQL(sql3);
+executeSQL(sql4);
     // Existing travel_entries table
     std::string sql1 = R"(
         CREATE TABLE IF NOT EXISTS travel_entries (
@@ -379,4 +401,90 @@ std::vector<City> Database::getAllCities() {
     }
     sqlite3_finalize(stmt);
     return cities;
+}
+
+// ========================================
+// V3 Database Methods Implementation
+// Add these to the end of src/Database.cpp
+// ========================================
+
+// ── Video Operations ──────────────────────────────────
+
+bool Database::insertVideo(const std::string& city, const std::string& youtubeUrl, const std::string& title) {
+    std::string sql = "INSERT INTO videos (city, youtube_url, title) VALUES (?, ?, ?);";
+    
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
+    
+    sqlite3_bind_text(stmt, 1, city.c_str(),       -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, youtubeUrl.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, title.c_str(),      -1, SQLITE_STATIC);
+    
+    int result = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    
+    return result == SQLITE_DONE;
+}
+
+std::vector<std::pair<std::string, std::string>> Database::getVideosByCity(const std::string& city) {
+    std::vector<std::pair<std::string, std::string>> videos;
+    std::string sql = "SELECT youtube_url, title FROM videos WHERE city = ? ORDER BY id;";
+    
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
+    sqlite3_bind_text(stmt, 1, city.c_str(), -1, SQLITE_STATIC);
+    
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        std::string url(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)) ?: "");
+        std::string title(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)) ?: "");
+        
+        videos.push_back({url, title});
+    }
+    sqlite3_finalize(stmt);
+    
+    return videos;
+}
+
+// ── Media Coverage Operations ──────────────────────────
+
+bool Database::insertMediaCoverage(const std::string& city, const std::string& title, 
+                                   const std::string& url, const std::string& sourceType, 
+                                   const std::string& sourceName) {
+    std::string sql = "INSERT INTO media_coverage (city, title, url, source_type, source_name) VALUES (?, ?, ?, ?, ?);";
+    
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
+    
+    sqlite3_bind_text(stmt, 1, city.c_str(),       -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 2, title.c_str(),      -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 3, url.c_str(),        -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 4, sourceType.c_str(), -1, SQLITE_STATIC);
+    sqlite3_bind_text(stmt, 5, sourceName.c_str(), -1, SQLITE_STATIC);
+    
+    int result = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    
+    return result == SQLITE_DONE;
+}
+
+std::vector<std::tuple<std::string, std::string, std::string, std::string>> 
+Database::getMediaByCity(const std::string& city) {
+    std::vector<std::tuple<std::string, std::string, std::string, std::string>> media;
+    std::string sql = "SELECT title, url, source_type, source_name FROM media_coverage WHERE city = ? ORDER BY source_type, id;";
+    
+    sqlite3_stmt* stmt;
+    sqlite3_prepare_v2(m_db, sql.c_str(), -1, &stmt, nullptr);
+    sqlite3_bind_text(stmt, 1, city.c_str(), -1, SQLITE_STATIC);
+    
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+        std::string title(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)) ?: "");
+        std::string url(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)) ?: "");
+        std::string type(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2)) ?: "");
+        std::string source(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)) ?: "");
+        
+        media.push_back(std::make_tuple(title, url, type, source));
+    }
+    sqlite3_finalize(stmt);
+    
+    return media;
 }

@@ -1,6 +1,7 @@
-#include <iostream>
 #include "Database.h"
 #include "DiaryApp.h"
+#include <iostream>
+#include <vector>
 
 int main() {
     Database db("database/diary.db");
@@ -100,6 +101,82 @@ int main() {
         std::cout << "Inserted " << entries.size() << " entries and " 
                   << cities.size() << " city guides.\n";
     }
+
+    // ── Seed Videos ────────────────────────────────────────
+    std::vector<std::pair<std::string, std::pair<std::string, std::string>>> videos = {
+        {"Islamabad", {"https://www.youtube.com/embed/dQw4w9WgXcQ", "Faisal Mosque - Pakistan's Most Beautiful Mosque"}},
+        {"Islamabad", {"https://www.youtube.com/embed/jNQXAC9IVRw", "Margalla Hills Hiking Adventure - Nature's Paradise"}},
+        {"Taxila", {"https://www.youtube.com/embed/9bZkp7q19f0", "Ancient Buddhist Ruins - UNESCO World Heritage Site"}},
+        {"Taxila", {"https://www.youtube.com/embed/wIZpJw0W8gE", "2000 Years of History in Taxila"}},
+        {"Lahore", {"https://www.youtube.com/embed/AJ8xQaMFpA0", "Lahore Fort - Mughal Architecture Masterpiece"}},
+        {"Lahore", {"https://www.youtube.com/embed/e4Jx5OhLKAc", "Food Street Lahore - Street Food Paradise"}},
+        {"Murree", {"https://www.youtube.com/embed/L3ww94j1hHg", "Murree Hill Station - Summer Escape"}},
+        {"Rawalpindi", {"https://www.youtube.com/embed/TzRGdwTDdJ8", "Rawalpindi Military History Tour"}},
+    };
+
+    // Insert videos if table is empty
+    auto videosCount = db.getVideosByCity("Islamabad").size();
+    if (videosCount == 0) {
+        std::cout << "Seeding videos...\n";
+        for (const auto& v : videos) {
+            db.insertVideo(v.first, v.second.first, v.second.second);
+        }
+    }
+
+    // ── Seed Media Coverage ────────────────────────────────
+    std::vector<std::tuple<std::string, std::string, std::string, std::string, std::string>> mediaItems = {
+        // Islamabad Media
+        {"Islamabad", "Faisal Mosque: The World's Most Beautiful Mosque", 
+         "https://www.dawn.com/news/islamabad-faisal-mosque", "News", "Dawn News"},
+        {"Islamabad", "Pakistan's Hidden Gems - Travel Magazine Feature", 
+         "https://www.lonelyplanet.com/pakistan/islamabad", "Magazine", "Lonely Planet"},
+        {"Islamabad", "Vlog: 48 Hours in Islamabad - Must Visit Places", 
+         "https://www.youtube.com/results?search_query=islamabad+travel+vlog", "Vlogger", "Travel Vloggers"},
+        
+        // Taxila Media
+        {"Taxila", "Ancient Silk Road: Taxila's Buddhist Heritage", 
+         "https://www.archaeology.org/taxila-discoveries", "Magazine", "Archaeology Magazine"},
+        {"Taxila", "UNESCO World Heritage: Taxila Buddhist Complex", 
+         "https://www.bbc.com/travel/article/taxila-pakistan", "News", "BBC Travel"},
+        {"Taxila", "2000 Years of History in One Place - Taxila Vlog", 
+         "https://www.youtube.com/results?search_query=taxila+buddhist+ruins", "Vlogger", "History Explorers"},
+        
+        // Lahore Media
+        {"Lahore", "Lahore Fort: Pakistan's Mughal Masterpiece", 
+         "https://www.nationalgeographic.com/travel/article/lahore-fort", "Magazine", "National Geographic"},
+        {"Lahore", "Lahore Food Street Named Best in Asia", 
+         "https://www.timeoutlahore.com/food/lahore-food-street", "News", "Timeout Lahore"},
+        {"Lahore", "Complete Lahore Guide: Forts, Food, Culture", 
+         "https://www.youtube.com/results?search_query=lahore+complete+guide+vlog", "Vlogger", "Travel Guides"},
+        
+        // Murree Media
+        {"Murree", "Hill Stations of Pakistan: Travel Guide", 
+         "https://www.travelguide.com/murree-hill-station", "Magazine", "Travel Guide"},
+        {"Murree", "Summer in Murree: Perfect Hill Station Escape", 
+         "https://www.express.com.pk/epaper/murree-tourism", "News", "Express Tribune"},
+        {"Murree", "Murree Vlog: Chair Lift, Mall Road & Nature", 
+         "https://www.youtube.com/results?search_query=murree+hill+station+vlog", "Vlogger", "Adventure Vlogs"},
+        
+        // Rawalpindi Media
+        {"Rawalpindi", "Rawalpindi: The City of Soldiers - Military History", 
+         "https://www.historicpakistan.com/rawalpindi", "Magazine", "Historic Pakistan"},
+        {"Rawalpindi", "Rawalpindi Army Museum: Pakistan's Military Heritage", 
+         "https://www.dawn.com/news/rawalpindi-army-museum", "News", "Dawn News"},
+        {"Rawalpindi", "Rawalpindi Military History & Heritage Sites Tour", 
+         "https://www.youtube.com/results?search_query=rawalpindi+military+tour", "Vlogger", "History Tours"},
+    };
+
+    // Insert media if table is empty
+    auto mediaCount = db.getMediaByCity("Islamabad").size();
+    if (mediaCount == 0) {
+        std::cout << "Seeding media coverage...\n";
+        for (const auto& m : mediaItems) {
+            db.insertMediaCoverage(std::get<0>(m), std::get<1>(m), std::get<2>(m), 
+                                   std::get<3>(m), std::get<4>(m));
+        }
+    }
+
+    std::cout << "\n✅ V3 Seeding Complete!\n\n";
 
     DiaryApp app(db);
     app.run();

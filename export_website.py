@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 """
-My Pakistan Travel Diary - Professional HTML Website Generator
-Generates multi-page tourism promotion website from SQLite database
-Uses OpenStreetMap + Leaflet (completely free, no API key required)
+My Pakistan Travel Diary - V3 Website Generator
+Multi-page tourism promotion website with videos & media coverage
 """
 
 import sqlite3
 import os
 import shutil
-from datetime import datetime
 
 class TravelWebsiteGenerator:
     def __init__(self, db_path, output_dir="export"):
@@ -17,39 +15,41 @@ class TravelWebsiteGenerator:
         self.conn = None
         
     def connect_db(self):
-        """Connect to SQLite database"""
         self.conn = sqlite3.connect(self.db_path)
         self.conn.row_factory = sqlite3.Row
         return self.conn.cursor()
     
     def setup_output(self):
-        """Create export directories"""
         os.makedirs(f"{self.output_dir}/css", exist_ok=True)
         os.makedirs(f"{self.output_dir}/photos", exist_ok=True)
-        
+    
     def get_cities(self):
-        """Fetch all cities from database"""
         cursor = self.connect_db()
         cursor.execute("SELECT * FROM cities ORDER BY name")
         return cursor.fetchall()
     
     def get_entries_by_city(self, city_name):
-        """Fetch entries for a specific city"""
         cursor = self.connect_db()
         cursor.execute("SELECT * FROM travel_entries WHERE city = ? ORDER BY date DESC", (city_name,))
         return cursor.fetchall()
     
-    def get_all_entries(self):
-        """Fetch all entries"""
+    def get_videos_by_city(self, city_name):
+        """Get all videos for a city"""
         cursor = self.connect_db()
-        cursor.execute("SELECT * FROM travel_entries")
+        cursor.execute("SELECT youtube_url, title, description FROM videos WHERE city = ?", (city_name,))
+        return cursor.fetchall()
+    
+    def get_media_by_city(self, city_name):
+        """Get all media coverage for a city"""
+        cursor = self.connect_db()
+        cursor.execute("SELECT title, url, source_type, source_name FROM media_coverage WHERE city = ? ORDER BY source_type", (city_name,))
         return cursor.fetchall()
     
     def generate_css_base(self):
-        """Generate base shared CSS"""
-        css = """
+        """Base CSS (same as before)"""
+        return """
 /* ========================================
-   My Pakistan Travel Diary - Base Styles
+   My Pakistan Travel Diary V3 - Base Styles
    ======================================== */
 
 * {
@@ -62,8 +62,6 @@ class TravelWebsiteGenerator:
     --color-primary: #0a6b3f;
     --color-primary-light: #00a86d;
     --color-primary-dark: #055033;
-    
-    /* Light mode defaults */
     --bg-primary: #ffffff;
     --bg-secondary: #f8f9fa;
     --bg-tertiary: #e9ecef;
@@ -97,10 +95,7 @@ body {
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* ========================================
-   Navbar
-   ======================================== */
-
+/* Navbar */
 .navbar {
     background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
     padding: 1rem 2rem;
@@ -118,21 +113,12 @@ body {
     font-weight: bold;
     color: white;
     text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: opacity 0.3s;
-}
-
-.navbar-brand:hover {
-    opacity: 0.9;
 }
 
 .navbar-nav {
     display: flex;
     gap: 2rem;
     align-items: center;
-    flex-wrap: wrap;
 }
 
 .nav-link {
@@ -140,7 +126,6 @@ body {
     text-decoration: none;
     font-size: 1rem;
     transition: opacity 0.3s;
-    font-weight: 500;
 }
 
 .nav-link:hover {
@@ -154,25 +139,17 @@ body {
     background: rgba(255, 255, 255, 0.2);
     color: white;
     cursor: pointer;
-    font-size: 0.95rem;
     font-weight: 600;
     transition: all 0.3s;
 }
 
 .theme-toggle:hover {
     background: rgba(255, 255, 255, 0.3);
-    transform: scale(1.05);
 }
 
-/* ========================================
-   Hero Section
-   ======================================== */
-
+/* Hero */
 .hero {
-    background: linear-gradient(135deg, rgba(10, 107, 63, 0.9) 0%, rgba(0, 168, 109, 0.9) 100%),
-                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400"><path fill="rgba(255,255,255,0.1)" d="M0,200 Q300,100 600,200 T1200,200 L1200,400 L0,400 Z"/></svg>');
-    background-size: cover;
-    background-position: center;
+    background: linear-gradient(135deg, rgba(10, 107, 63, 0.9) 0%, rgba(0, 168, 109, 0.9) 100%);
     background-attachment: fixed;
     color: white;
     padding: 6rem 2rem;
@@ -181,43 +158,27 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: center;
-    align-items: center;
 }
 
 .hero h1 {
     font-size: 3.5rem;
     margin-bottom: 1rem;
     text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.4);
-    animation: fadeInDown 0.8s ease;
 }
 
 .hero p {
     font-size: 1.3rem;
-    margin-bottom: 2rem;
     text-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
-    animation: fadeInUp 0.8s ease 0.2s backwards;
 }
 
-@keyframes fadeInDown {
-    from { opacity: 0; transform: translateY(-30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* ========================================
-   Container & Grid
-   ======================================== */
-
+/* Container */
 .container {
     max-width: 1200px;
     margin: 0 auto;
     padding: 0 2rem;
 }
 
+/* Grid */
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -225,17 +186,14 @@ body {
     margin: 3rem 0;
 }
 
-/* ========================================
-   Cards
-   ======================================== */
-
+/* Card */
 .card {
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 2rem;
     box-shadow: 0 2px 8px var(--card-shadow);
-    transition: all 0.3s ease;
+    transition: all 0.3s;
 }
 
 .card:hover {
@@ -245,32 +203,10 @@ body {
 
 .card h3 {
     color: var(--color-primary-light);
-    font-size: 1.5rem;
     margin-bottom: 1rem;
 }
 
-.card p {
-    color: var(--text-secondary);
-    line-height: 1.8;
-}
-
-.card a {
-    color: var(--color-primary-light);
-    text-decoration: none;
-    font-weight: 600;
-    display: inline-block;
-    margin-top: 1rem;
-    transition: opacity 0.3s;
-}
-
-.card a:hover {
-    opacity: 0.8;
-}
-
-/* ========================================
-   City Section
-   ======================================== */
-
+/* City Section */
 .city-section {
     margin: 4rem 0;
     padding: 3rem;
@@ -279,26 +215,18 @@ body {
     border-left: 5px solid var(--color-primary-light);
 }
 
-.city-header {
-    margin-bottom: 2rem;
-}
-
 .city-header h2 {
     font-size: 2.5rem;
     color: var(--color-primary-light);
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
 }
 
 .city-description {
     font-size: 1.1rem;
     color: var(--text-secondary);
-    line-height: 1.8;
 }
 
-/* ========================================
-   Info Boxes
-   ======================================== */
-
+/* Info Boxes */
 .city-info {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -312,46 +240,109 @@ body {
     border-radius: 8px;
     border-left: 4px solid var(--color-primary);
     box-shadow: 0 2px 8px var(--card-shadow);
-    transition: transform 0.3s;
-}
-
-.info-box:hover {
-    transform: translateY(-2px);
 }
 
 .info-box h4 {
     color: var(--color-primary-light);
     margin-bottom: 0.5rem;
-    font-size: 1.1rem;
 }
 
-.info-box p {
-    color: var(--text-secondary);
-    line-height: 1.6;
-}
-
-/* ========================================
-   Maps
-   ======================================== */
-
-.map-container, #map {
-    width: 100%;
-    height: 500px;
+/* Videos Section */
+.videos-section {
+    margin: 3rem 0;
+    padding: 2rem;
+    background: var(--bg-primary);
     border-radius: 8px;
-    margin: 2rem 0;
+    border: 2px solid var(--color-primary-light);
+}
+
+.videos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 2rem;
+}
+
+.video-card {
+    border-radius: 8px;
+    overflow: hidden;
     box-shadow: 0 4px 12px var(--card-shadow);
-    border: 1px solid var(--border-color);
+    transition: transform 0.3s;
 }
 
-.leaflet-container {
-    background: var(--bg-secondary) !important;
+.video-card:hover {
+    transform: translateY(-4px);
+}
+
+.video-card iframe {
+    width: 100%;
+    height: 250px;
+    border: none;
+}
+
+.video-title {
+    padding: 1rem;
+    background: var(--bg-secondary);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Media Section */
+.media-section {
+    margin: 3rem 0;
+    padding: 2rem;
+    background: var(--bg-secondary);
     border-radius: 8px;
 }
 
-/* ========================================
-   Travel Entries
-   ======================================== */
+.media-by-type {
+    margin: 1.5rem 0;
+}
 
+.media-type-title {
+    font-size: 1.2rem;
+    color: var(--color-primary-light);
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.media-list {
+    list-style: none;
+    padding: 0;
+}
+
+.media-item {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: var(--bg-primary);
+    border-left: 4px solid var(--color-primary);
+    border-radius: 4px;
+    box-shadow: 0 2px 8px var(--card-shadow);
+    transition: all 0.3s;
+}
+
+.media-item:hover {
+    transform: translateX(4px);
+}
+
+.media-item a {
+    color: var(--color-primary-light);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+.media-item a:hover {
+    text-decoration: underline;
+}
+
+.media-source {
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* Entries */
 .entries-section h3 {
     font-size: 1.8rem;
     margin: 2rem 0 1rem;
@@ -365,18 +356,11 @@ body {
     padding: 1.5rem;
     margin-bottom: 1.5rem;
     box-shadow: 0 2px 8px var(--card-shadow);
-    transition: all 0.3s;
-}
-
-.entry-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px var(--card-hover-shadow);
 }
 
 .entry-card h4 {
     font-size: 1.3rem;
     margin-bottom: 0.5rem;
-    color: var(--text-primary);
 }
 
 .entry-meta {
@@ -392,7 +376,6 @@ body {
     font-size: 0.85rem;
     background: rgba(0, 168, 109, 0.15);
     color: var(--color-primary-light);
-    font-weight: 500;
 }
 
 .mood-badge {
@@ -403,30 +386,23 @@ body {
     color: white;
 }
 
-.entry-description {
-    color: var(--text-secondary);
-    line-height: 1.8;
-    margin: 1rem 0;
-    font-style: italic;
-    font-size: 0.95rem;
-}
-
 .entry-photo {
-    margin: 1.5rem 0;
     max-width: 100%;
     border-radius: 8px;
+    margin: 1rem 0;
     box-shadow: 0 4px 12px var(--card-shadow);
-    transition: transform 0.3s;
 }
 
-.entry-photo:hover {
-    transform: scale(1.02);
+/* Map */
+#map, .map-container {
+    width: 100%;
+    height: 500px;
+    border-radius: 8px;
+    margin: 2rem 0;
+    box-shadow: 0 4px 12px var(--card-shadow);
 }
 
-/* ========================================
-   Footer
-   ======================================== */
-
+/* Footer */
 footer {
     background: linear-gradient(135deg, rgba(10, 107, 63, 0.95) 0%, rgba(0, 168, 109, 0.95) 100%);
     color: white;
@@ -442,24 +418,16 @@ footer p {
 footer a {
     color: #e0e0e0;
     text-decoration: none;
-    transition: opacity 0.3s;
 }
 
 footer a:hover {
     opacity: 0.8;
 }
 
-/* ========================================
-   Responsive Design
-   ======================================== */
-
+/* Responsive */
 @media (max-width: 768px) {
     .navbar {
         flex-direction: column;
-        gap: 1rem;
-    }
-    
-    .navbar-nav {
         gap: 1rem;
     }
     
@@ -467,140 +435,123 @@ footer a:hover {
         font-size: 2rem;
     }
     
-    .hero p {
-        font-size: 1rem;
-    }
-    
-    .city-header h2 {
-        font-size: 1.8rem;
-    }
-    
     .grid {
         grid-template-columns: 1fr;
     }
     
-    .map-container, #map {
+    #map, .map-container {
         height: 300px;
     }
     
-    .entry-meta {
-        gap: 0.5rem;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero {
-        padding: 3rem 1rem;
-    }
-    
-    .hero h1 {
-        font-size: 1.5rem;
-    }
-    
-    .container {
-        padding: 0 1rem;
-    }
-    
-    .card {
-        padding: 1rem;
-    }
-    
-    .city-section {
-        padding: 1.5rem;
+    .videos-grid {
+        grid-template-columns: 1fr;
     }
 }
 """
-        return css
     
-    def generate_index_html(self, cities):
-        """Generate home page"""
-        city_cards = ""
-        for city in cities:
-            city_cards += f"""
-            <div class="card">
-                <h3>{city['name']}</h3>
-                <p>{city['description'][:120]}...</p>
-                <p><strong>📅 Best Time:</strong> {city['best_time']}</p>
-                <a href="city-{city['name'].lower().replace(' ', '-')}.html">
-                   Explore {city['name']} →
-                </a>
-            </div>
-            """
+    def generate_videos_section(self, videos):
+        """Generate embedded YouTube videos section"""
+        if not videos:
+            return ""
         
-        html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>My Pakistan Travel Diary - Explore Pakistan's Hidden Gems</title>
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-    <nav class="navbar">
-        <a href="index.html" class="navbar-brand">🇵🇰 My Pakistan Travel Diary</a>
-        <div class="navbar-nav">
-            <a href="cities.html" class="nav-link">All Cities</a>
-            <a href="#cities" class="nav-link">Explore</a>
-            <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
-        </div>
-    </nav>
-
-    <section class="hero">
-        <h1>Discover Pakistan's Hidden Gems</h1>
-        <p>A personal journey through Pakistan's most beautiful destinations</p>
-    </section>
-
-    <section class="container">
-        <h2 style="text-align: center; margin: 3rem 0; color: var(--color-primary-light); font-size: 2rem;">
-            Featured Destinations
-        </h2>
-        <div class="grid" id="cities">
-            {city_cards}
-        </div>
-    </section>
-
-    <footer>
-        <p><strong>My Pakistan Travel Diary</strong></p>
-        <p>🌍 Celebrating Pakistan's beauty, culture, and adventure</p>
-        <p style="margin-top: 1rem; font-size: 0.9rem;">
-            📸 Real memories • 🗺️ Travel guides • 💚 Promote tourism
+        html = """
+    <section class="videos-section">
+        <h3 style="font-size: 1.8rem; color: var(--color-primary-light); margin-bottom: 1rem;">
+            🎬 Destination Videos
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            Watch travel vlogs and documentaries about this beautiful destination.
         </p>
-        <p style="margin-top: 1rem; color: rgba(255,255,255,0.9); font-size: 0.85rem;">
-            Mental Wellness Support: Umang helpline <strong>0317-4288665</strong>
-        </p>
-    </footer>
-
-    <script>
-        function toggleTheme() {{
-            const body = document.body;
-            const button = document.querySelector('.theme-toggle');
+        <div class="videos-grid">
+"""
+        
+        for video in videos:
+            youtube_id = video[0].split('embed/')[-1] if 'embed/' in video[0] else video[0]
+            title = video[1] or "Travel Video"
             
-            if (body.classList.contains('dark-mode')) {{
-                body.classList.remove('dark-mode');
-                button.textContent = '🌙 Dark Mode';
-                localStorage.setItem('theme', 'light');
-            }} else {{
-                body.classList.add('dark-mode');
-                button.textContent = '☀️ Light Mode';
-                localStorage.setItem('theme', 'dark');
-            }}
-        }}
+            html += f"""
+            <div class="video-card">
+                <iframe src="https://www.youtube.com/embed/{youtube_id}" 
+                    title="{title}"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+                <div class="video-title">{title}</div>
+            </div>
+"""
         
-        // Load saved theme on page load
-        if (localStorage.getItem('theme') === 'dark') {{
-            document.body.classList.add('dark-mode');
-            document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
-        }}
-    </script>
-</body>
-</html>
+        html += """
+        </div>
+    </section>
+"""
+        return html
+    
+    def generate_media_section(self, media):
+        """Generate media coverage links section"""
+        if not media:
+            return ""
+        
+        # Group by source type
+        media_by_type = {}
+        type_icons = {
+            "Magazine": "📖",
+            "News": "📡",
+            "Vlogger": "🎥"
+        }
+        
+        for item in media:
+            source_type = item[2] or "Other"
+            if source_type not in media_by_type:
+                media_by_type[source_type] = []
+            media_by_type[source_type].append(item)
+        
+        html = """
+    <section class="media-section">
+        <h3 style="font-size: 1.8rem; color: var(--color-primary-light); margin-bottom: 1rem;">
+            📰 Media Coverage & Reviews
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            See what travel magazines, news outlets, and vloggers are saying about this destination.
+        </p>
+"""
+        
+        for source_type in sorted(media_by_type.keys()):
+            icon = type_icons.get(source_type, "📄")
+            items = media_by_type[source_type]
+            
+            html += f"""
+        <div class="media-by-type">
+            <h4 class="media-type-title">{icon} {source_type}</h4>
+            <ul class="media-list">
+"""
+            
+            for item in items:
+                title, url, _, source_name = item
+                html += f"""
+                <li class="media-item">
+                    <a href="{url}" target="_blank">{title} →</a>
+                    <p class="media-source">Source: {source_name or source_type}</p>
+                </li>
+"""
+            
+            html += """
+            </ul>
+        </div>
+"""
+        
+        html += """
+    </section>
 """
         return html
     
     def generate_city_html(self, city, entries):
-        """Generate individual city page"""
+        """Generate city page with videos and media"""
         
-        # Mood color mapping
+        videos = self.get_videos_by_city(city['name'])
+        media = self.get_media_by_city(city['name'])
+        videos_html = self.generate_videos_section(videos)
+        media_html = self.generate_media_section(media)
+        
         mood_colors = {
             "Peaceful": "#4682B4",
             "Joyful": "#FFA500",
@@ -610,7 +561,6 @@ footer a:hover {
             "Anxious": "#DC143C"
         }
         
-        # Build entries section
         entries_html = ""
         for entry in entries:
             mood = entry['mood'] or 'Peaceful'
@@ -629,10 +579,10 @@ footer a:hover {
                     <span class="meta-tag">⭐ {entry['rating']}/5</span>
                     <span class="meta-tag">{entry['category']}</span>
                 </div>
-                <p class="entry-description">"{entry['description']}"</p>
+                <p style="color: var(--text-secondary); font-style: italic; margin: 1rem 0;">"{entry['description']}"</p>
                 {photo_html}
             </div>
-            """
+"""
         
         html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -678,6 +628,10 @@ footer a:hover {
             
             <div class="map-container" id="map"></div>
             
+            {videos_html}
+            
+            {media_html}
+            
             <div class="entries-section">
                 <h3>My Travel Experiences in {city['name']}</h3>
                 {entries_html if entries_html else '<p>No entries yet for this city.</p>'}
@@ -687,31 +641,29 @@ footer a:hover {
 
     <footer>
         <p><strong>My Pakistan Travel Diary</strong></p>
-        <p>Exploring {city['name']} - one journey at a time</p>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-            📍 <strong>Coordinates:</strong> {city['latitude']:.4f}°N, {city['longitude']:.4f}°E
+        <p>Celebrating Pakistan's beauty, culture, and adventure</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+            📍 {city['name']} • Coordinates: {city['latitude']:.4f}°N, {city['longitude']:.4f}°E
+        </p>
+        <p style="margin-top: 1rem; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+            Mental Wellness Support: Umang helpline <strong>0317-4288665</strong>
         </p>
     </footer>
 
+    <script src="https://maps.googleapis.com/maps/api/js?key="></script>
     <script>
-        // Initialize OpenStreetMap with Leaflet
         function initMap() {{
             const map = L.map('map').setView([{city['latitude']}, {city['longitude']}], 12);
-            
-            // OpenStreetMap tile layer (completely free)
             L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
                 attribution: '&copy; OpenStreetMap contributors',
-                maxZoom: 18,
-                className: 'leaflet-tile'
+                maxZoom: 18
             }}).addTo(map);
             
-            // Add marker for the city
-            L.marker([{city['latitude']}, {city['longitude']}], {{
-                title: '{city['name']}'
-            }}).addTo(map).bindPopup('<b>{city['name']}</b><br>Your travel destination').openPopup();
+            L.marker([{city['latitude']}, {city['longitude']}]).addTo(map)
+                .bindPopup('<b>{city['name']}</b><br>{city['description'][:50]}...')
+                .openPopup();
         }}
         
-        // Initialize map when page loads
         window.addEventListener('load', initMap);
         
         function toggleTheme() {{
@@ -729,7 +681,89 @@ footer a:hover {
             }}
         }}
         
-        // Load saved theme on page load
+        if (localStorage.getItem('theme') === 'dark') {{
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
+        }}
+    </script>
+</body>
+</html>
+"""
+        return html
+    
+    def generate_index_html(self, cities):
+        """Generate home page"""
+        city_cards = ""
+        for city in cities:
+            city_cards += f"""
+            <div class="card">
+                <h3>{city['name']}</h3>
+                <p>{city['description'][:120]}...</p>
+                <p><strong>📅 Best Time:</strong> {city['best_time']}</p>
+                <a href="city-{city['name'].lower().replace(' ', '-')}.html" style="color: var(--color-primary-light); text-decoration: none; font-weight: 600;">
+                   Explore {city['name']} →
+                </a>
+            </div>
+            """
+        
+        html = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Pakistan Travel Diary - Explore Hidden Gems</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <nav class="navbar">
+        <a href="index.html" class="navbar-brand">🇵🇰 My Pakistan Travel Diary</a>
+        <div class="navbar-nav">
+            <a href="cities.html" class="nav-link">All Cities</a>
+            <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <h1>Discover Pakistan's Hidden Gems</h1>
+        <p>A personal journey through Pakistan's most beautiful destinations</p>
+    </section>
+
+    <section class="container">
+        <h2 style="text-align: center; margin: 3rem 0; color: var(--color-primary-light); font-size: 2rem;">
+            Featured Destinations
+        </h2>
+        <div class="grid">
+            {city_cards}
+        </div>
+    </section>
+
+    <footer>
+        <p><strong>My Pakistan Travel Diary</strong></p>
+        <p>🌍 Celebrating Pakistan's beauty, culture, and adventure</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+            📸 Real memories • 🎬 Destination videos • 📰 Media coverage • 🗺️ Travel guides
+        </p>
+        <p style="margin-top: 1rem; color: rgba(255,255,255,0.9); font-size: 0.85rem;">
+            Mental Wellness Support: Umang helpline <strong>0317-4288665</strong>
+        </p>
+    </footer>
+
+    <script>
+        function toggleTheme() {{
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            
+            if (body.classList.contains('dark-mode')) {{
+                body.classList.remove('dark-mode');
+                button.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            }} else {{
+                body.classList.add('dark-mode');
+                button.textContent = '☀️ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }}
+        }}
+        
         if (localStorage.getItem('theme') === 'dark') {{
             document.body.classList.add('dark-mode');
             document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
@@ -741,7 +775,7 @@ footer a:hover {
         return html
     
     def generate_cities_overview(self, cities):
-        """Generate cities overview page"""
+        """Generate all cities page"""
         city_list = ""
         for city in cities:
             city_list += f"""
@@ -749,8 +783,8 @@ footer a:hover {
                 <h3>{city['name']}</h3>
                 <p><strong>📍 Location:</strong> {city['latitude']:.4f}°N, {city['longitude']:.4f}°E</p>
                 <p>{city['description']}</p>
-                <a href="city-{city['name'].lower().replace(' ', '-')}.html">
-                   View Details & Map →
+                <a href="city-{city['name'].lower().replace(' ', '-')}.html" style="color: var(--color-primary-light); text-decoration: none; font-weight: 600; display: inline-block; margin-top: 1rem;">
+                   View Details, Videos & Media →
                 </a>
             </div>
             """
@@ -768,14 +802,13 @@ footer a:hover {
         <a href="index.html" class="navbar-brand">🇵🇰 My Pakistan Travel Diary</a>
         <div class="navbar-nav">
             <a href="index.html" class="nav-link">Home</a>
-            <a href="cities.html" class="nav-link">All Cities</a>
             <button class="theme-toggle" onclick="toggleTheme()">🌙 Dark Mode</button>
         </div>
     </nav>
 
     <section class="hero">
-        <h1>Explore All My Destinations</h1>
-        <p>Discover every city in my Pakistan travel journey</p>
+        <h1>Explore All Destinations</h1>
+        <p>Complete guide to every city in my Pakistan travel journey</p>
     </section>
 
     <section class="container">
@@ -786,9 +819,9 @@ footer a:hover {
 
     <footer>
         <p><strong>My Pakistan Travel Diary</strong></p>
-        <p>Your guide to Pakistan's most beautiful and historic destinations</p>
+        <p>Your gateway to Pakistan's most beautiful destinations</p>
         <p style="margin-top: 1rem; font-size: 0.85rem; color: rgba(255,255,255,0.9);">
-            Built to promote Pakistan's tourism and showcase the beauty of each destination
+            With destination videos, media coverage, travel tips, and real traveler experiences
         </p>
     </footer>
 
@@ -842,18 +875,16 @@ footer a:hover {
     def generate(self):
         """Generate entire website"""
         print("\n" + "="*60)
-        print("🌍 MY PAKISTAN TRAVEL DIARY - WEBSITE GENERATOR")
+        print("🌍 MY PAKISTAN TRAVEL DIARY - V3 WEBSITE GENERATOR")
         print("="*60 + "\n")
         
         try:
             self.setup_output()
             
-            # Get data from database
             cities = self.get_cities()
             
             if not cities:
                 print("❌ No cities found in database!")
-                print("   Please add cities first.\n")
                 return False
             
             print(f"📍 Found {len(cities)} cities\n")
@@ -876,36 +907,40 @@ footer a:hover {
             
             for city in cities:
                 entries = self.get_entries_by_city(city['name'])
+                videos = self.get_videos_by_city(city['name'])
+                media = self.get_media_by_city(city['name'])
+                
                 filename = city['name'].lower().replace(' ', '-')
                 with open(f"{self.output_dir}/city-{filename}.html", "w") as f:
                     f.write(self.generate_city_html(city, entries))
-                entry_count = len(entries)
-                print(f"  ✓ city-{filename}.html ({entry_count} entries)")
+                
+                print(f"  ✓ city-{filename}.html ({len(entries)} entries, {len(videos)} videos, {len(media)} media)")
             
             # Copy photos
             print("\nCopying photos...")
             self.copy_photos()
             
             print("\n" + "="*60)
-            print("✅ WEBSITE GENERATED SUCCESSFULLY!")
+            print("✅ V3 WEBSITE GENERATED SUCCESSFULLY!")
             print("="*60)
             print(f"\n📂 Open: {self.output_dir}/index.html")
             print("\n🎨 Features:")
-            print("  • Light/Dark mode toggle")
-            print("  • Free OpenStreetMap integration")
-            print("  • Responsive mobile design")
-            print("  • Professional tourism layout")
-            print("  • City guides & travel tips")
+            print("  ✓ Light/Dark mode toggle")
+            print("  ✓ YouTube embedded videos")
+            print("  ✓ Media coverage links (Magazines, News, Vloggers)")
+            print("  ✓ Free OpenStreetMap")
+            print("  ✓ Responsive design")
+            print("  ✓ Professional tourism layout")
             print("\n" + "="*60 + "\n")
             return True
             
         except Exception as e:
             print(f"❌ Error: {e}\n")
+            import traceback
+            traceback.print_exc()
             return False
 
-# Main execution
 if __name__ == "__main__":
-    # Use current directory database
     generator = TravelWebsiteGenerator("database/diary.db")
     success = generator.generate()
     exit(0 if success else 1)
