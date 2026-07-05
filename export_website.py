@@ -36,7 +36,7 @@ class TravelWebsiteGenerator:
     def get_videos_by_city(self, city_name):
         """Get all videos for a city"""
         cursor = self.connect_db()
-        cursor.execute("SELECT youtube_url, title, description FROM videos WHERE city = ?", (city_name,))
+        cursor.execute("SELECT youtube_url, title FROM videos WHERE city = ?", (city_name,))
         return cursor.fetchall()
     
     def get_media_by_city(self, city_name):
