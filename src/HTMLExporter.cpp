@@ -66,7 +66,7 @@ std::string HTMLExporter::copyPhotoToExport(const std::string& sourcePath) const
                            : sourcePath.substr(lastSlash + 1);
     
     // Destination in export folder
-    std::string destPath = "export/" + filename;
+    std::string destPath = "export/photos/" + filename;
     
     // Use cp -f to force copy (works for JPEG, PNG, etc)
     std::string cmd = "cp -f \"" + sourcePath + "\" \"" + destPath + "\" 2>/dev/null";

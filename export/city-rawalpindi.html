@@ -32,15 +32,74 @@
                 </div>
                 <div class="info-box">
                     <h4>🛡️ Safety Information</h4>
-                    <p>Safe city with good security...</p>
+                    <p>Safe city with good security. Avoid monsoon season.</p>
                 </div>
                 <div class="info-box">
                     <h4>✈️ Traveler Tips</h4>
-                    <p>Visit Pindi Point, Ayub Park...</p>
+                    <p>Visit Pindi Point, Ayub Park. Try local food in Adiala Road.</p>
                 </div>
             </div>
             
             <div class="map-container" id="map"></div>
+            
+            
+    <section class="videos-section">
+        <h3 style="font-size: 1.8rem; color: var(--color-primary-light); margin-bottom: 1rem;">
+            🎬 Destination Videos
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            Watch travel vlogs and documentaries about this beautiful destination.
+        </p>
+        <div class="videos-grid">
+
+            <div class="video-card">
+                <iframe src="https://www.youtube.com/embed/TzRGdwTDdJ8" 
+                    title="Rawalpindi Military History"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+                <div class="video-title">Rawalpindi Military History</div>
+            </div>
+
+        </div>
+    </section>
+
+            
+            
+    <section class="media-section">
+        <h3 style="font-size: 1.8rem; color: var(--color-primary-light); margin-bottom: 1rem;">
+            📰 Media Coverage & Reviews
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            See what travel magazines, news outlets, and vloggers are saying about this destination.
+        </p>
+
+        <div class="media-by-type">
+            <h4 class="media-type-title">📖 Magazine</h4>
+            <ul class="media-list">
+
+                <li class="media-item">
+                    <a href="https://en.wikipedia.org/wiki/Rawalpindi" target="_blank">Rawalpindi City →</a>
+                    <p class="media-source">Source: Wikipedia</p>
+                </li>
+
+            </ul>
+        </div>
+
+        <div class="media-by-type">
+            <h4 class="media-type-title">📡 News</h4>
+            <ul class="media-list">
+
+                <li class="media-item">
+                    <a href="https://en.wikipedia.org/wiki/Pakistan_Army" target="_blank">Pakistan Army Museum →</a>
+                    <p class="media-source">Source: Wikipedia</p>
+                </li>
+
+            </ul>
+        </div>
+
+    </section>
+
             
             <div class="entries-section">
                 <h3>My Travel Experiences in Rawalpindi</h3>
@@ -53,53 +112,51 @@
                     <span class="meta-tag">⭐ 4.0/5</span>
                     <span class="meta-tag">Historical</span>
                 </div>
-                <p class="entry-description">"Fascinating military history of Pakistan. Tanks, aircraft and medals on display."</p>
+                <p style="color: var(--text-secondary); font-style: italic; margin: 1rem 0;">"Fascinating military history of Pakistan. Tanks, aircraft and medals on display."</p>
                 
             </div>
-            
+
             <div class="entry-card">
                 <h4>Daewoo Terminal</h4>
                 <div class="entry-meta">
                     <span class="meta-tag">📅 2026-02-10</span>
                     <span class="mood-badge" style="background-color: #32CD32;">Energized</span>
-                    <span class="meta-tag">⭐ 4.0/5</span>
+                    <span class="meta-tag">⭐ 3.0/5</span>
                     <span class="meta-tag">Recreation</span>
                 </div>
-                <p class="entry-description">"Travel hub — the gateway to every adventure. Captured the energy of people in transit."</p>
+                <p style="color: var(--text-secondary); font-style: italic; margin: 1rem 0;">"Travel hub — the gateway to every adventure. Captured the energy of people in transit."</p>
                 <img src="photos/WhatsApp Image 2026-06-19 at 4.58.33 PM.jpeg" alt="Daewoo Terminal" class="entry-photo">
             </div>
-            
+
             </div>
         </div>
     </section>
 
     <footer>
         <p><strong>My Pakistan Travel Diary</strong></p>
-        <p>Exploring Rawalpindi - one journey at a time</p>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-            📍 <strong>Coordinates:</strong> 33.5731°N, 73.1522°E
+        <p>Celebrating Pakistan's beauty, culture, and adventure</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+            📍 Rawalpindi • Coordinates: 33.5731°N, 73.1522°E
+        </p>
+        <p style="margin-top: 1rem; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+            Mental Wellness Support: Umang helpline <strong>0317-4288665</strong>
         </p>
     </footer>
 
+    <script src="https://maps.googleapis.com/maps/api/js?key="></script>
     <script>
-        // Initialize OpenStreetMap with Leaflet
         function initMap() {
             const map = L.map('map').setView([33.57310104370117, 73.1521987915039], 12);
-            
-            // OpenStreetMap tile layer (completely free)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
-                maxZoom: 18,
-                className: 'leaflet-tile'
+                maxZoom: 18
             }).addTo(map);
             
-            // Add marker for the city
-            L.marker([33.57310104370117, 73.1521987915039], {
-                title: 'Rawalpindi'
-            }).addTo(map).bindPopup('<b>Rawalpindi</b><br>Your travel destination').openPopup();
+            L.marker([33.57310104370117, 73.1521987915039]).addTo(map)
+                .bindPopup('<b>Rawalpindi</b><br>Historic city with military heritage and modern in...')
+                .openPopup();
         }
         
-        // Initialize map when page loads
         window.addEventListener('load', initMap);
         
         function toggleTheme() {
@@ -117,7 +174,6 @@
             }
         }
         
-        // Load saved theme on page load
         if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
             document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';

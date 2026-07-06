@@ -22,7 +22,7 @@
         <div class="container">
             <div class="city-header">
                 <h2>Lahore</h2>
-                <p class="city-description">Cultural heart of Pakistan...</p>
+                <p class="city-description">Cultural heart of Pakistan. Rich Mughal heritage and vibrant modern city.</p>
             </div>
             
             <div class="city-info">
@@ -32,62 +32,140 @@
                 </div>
                 <div class="info-box">
                     <h4>🛡️ Safety Information</h4>
-                    <p>Lively atmosphere...</p>
+                    <p>Lively atmosphere, busy streets. Use registered taxis.</p>
                 </div>
                 <div class="info-box">
                     <h4>✈️ Traveler Tips</h4>
-                    <p>Explore Shahi Qila...</p>
+                    <p>Explore Shahi Qila (Lahore Fort), Badshahi Mosque, food street.</p>
                 </div>
             </div>
             
             <div class="map-container" id="map"></div>
             
+            
+    <section class="videos-section">
+        <h3 style="font-size: 1.8rem; color: var(--color-primary-light); margin-bottom: 1rem;">
+            🎬 Destination Videos
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            Watch travel vlogs and documentaries about this beautiful destination.
+        </p>
+        <div class="videos-grid">
+
+            <div class="video-card">
+                <iframe src="https://www.youtube.com/embed/AJ8xQaMFpA0" 
+                    title="Lahore Fort Heritage Tour"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+                <div class="video-title">Lahore Fort Heritage Tour</div>
+            </div>
+
+            <div class="video-card">
+                <iframe src="https://www.youtube.com/embed/e4Jx5OhLKAc" 
+                    title="Lahore Food Street Experience"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+                <div class="video-title">Lahore Food Street Experience</div>
+            </div>
+
+        </div>
+    </section>
+
+            
+            
+    <section class="media-section">
+        <h3 style="font-size: 1.8rem; color: var(--color-primary-light); margin-bottom: 1rem;">
+            📰 Media Coverage & Reviews
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            See what travel magazines, news outlets, and vloggers are saying about this destination.
+        </p>
+
+        <div class="media-by-type">
+            <h4 class="media-type-title">📖 Magazine</h4>
+            <ul class="media-list">
+
+                <li class="media-item">
+                    <a href="https://en.wikipedia.org/wiki/Lahore_Fort" target="_blank">Lahore Fort - Wikipedia →</a>
+                    <p class="media-source">Source: Wikipedia</p>
+                </li>
+
+            </ul>
+        </div>
+
+        <div class="media-by-type">
+            <h4 class="media-type-title">📡 News</h4>
+            <ul class="media-list">
+
+                <li class="media-item">
+                    <a href="https://en.wikipedia.org/wiki/Badshahi_Mosque" target="_blank">Badshahi Mosque →</a>
+                    <p class="media-source">Source: Wikipedia</p>
+                </li>
+
+            </ul>
+        </div>
+
+    </section>
+
+            
             <div class="entries-section">
                 <h3>My Travel Experiences in Lahore</h3>
                 
             <div class="entry-card">
-                <h4>Top Spin , Joy land</h4>
+                <h4>Lahore — Shahi Qila</h4>
                 <div class="entry-meta">
                     <span class="meta-tag">📅 2024-12-25</span>
                     <span class="mood-badge" style="background-color: #FFA500;">Joyful</span>
                     <span class="meta-tag">⭐ 5.0/5</span>
+                    <span class="meta-tag">Historical</span>
+                </div>
+                <p style="color: var(--text-secondary); font-style: italic; margin: 1rem 0;">"Epic Lahore trip! Sheesh Mahal was the highlight."</p>
+                <img src="photos/WhatsApp Image 2026-07-05 at 3.28.50 PM.jpeg" alt="Lahore — Shahi Qila" class="entry-photo">
+            </div>
+
+            <div class="entry-card">
+                <h4>Joy Land</h4>
+                <div class="entry-meta">
+                    <span class="meta-tag">📅 2024-02-03</span>
+                    <span class="mood-badge" style="background-color: #4682B4;">Peaceful</span>
+                    <span class="meta-tag">⭐ 5.0/5</span>
                     <span class="meta-tag">Recreation</span>
                 </div>
-                <p class="entry-description">"Epic Lahore trip! Sheesh Mahal was the highlight. Joyland Top Spin ride was a rush."</p>
-                <img src="photos/WhatsApp Image 2026-06-19 at 5.57.11 PM.jpeg" alt="Top Spin , Joy land" class="entry-photo">
+                <p style="color: var(--text-secondary); font-style: italic; margin: 1rem 0;">"Top Spin is lit."</p>
+                <img src="photos/WhatsApp Image 2026-06-19 at 5.57.11 PM.jpeg" alt="Joy Land" class="entry-photo">
             </div>
-            
+
             </div>
         </div>
     </section>
 
     <footer>
         <p><strong>My Pakistan Travel Diary</strong></p>
-        <p>Exploring Lahore - one journey at a time</p>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-            📍 <strong>Coordinates:</strong> 31.5497°N, 74.3436°E
+        <p>Celebrating Pakistan's beauty, culture, and adventure</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+            📍 Lahore • Coordinates: 31.5497°N, 74.3436°E
+        </p>
+        <p style="margin-top: 1rem; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+            Mental Wellness Support: Umang helpline <strong>0317-4288665</strong>
         </p>
     </footer>
 
+    <script src="https://maps.googleapis.com/maps/api/js?key="></script>
     <script>
-        // Initialize OpenStreetMap with Leaflet
         function initMap() {
             const map = L.map('map').setView([31.549699783325195, 74.34359741210938], 12);
-            
-            // OpenStreetMap tile layer (completely free)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
-                maxZoom: 18,
-                className: 'leaflet-tile'
+                maxZoom: 18
             }).addTo(map);
             
-            // Add marker for the city
-            L.marker([31.549699783325195, 74.34359741210938], {
-                title: 'Lahore'
-            }).addTo(map).bindPopup('<b>Lahore</b><br>Your travel destination').openPopup();
+            L.marker([31.549699783325195, 74.34359741210938]).addTo(map)
+                .bindPopup('<b>Lahore</b><br>Cultural heart of Pakistan. Rich Mughal heritage a...')
+                .openPopup();
         }
         
-        // Initialize map when page loads
         window.addEventListener('load', initMap);
         
         function toggleTheme() {
@@ -105,7 +183,6 @@
             }
         }
         
-        // Load saved theme on page load
         if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
             document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';

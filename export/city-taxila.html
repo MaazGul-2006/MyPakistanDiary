@@ -42,6 +42,74 @@
             
             <div class="map-container" id="map"></div>
             
+            
+    <section class="videos-section">
+        <h3 style="font-size: 1.8rem; color: var(--color-primary-light); margin-bottom: 1rem;">
+            🎬 Destination Videos
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            Watch travel vlogs and documentaries about this beautiful destination.
+        </p>
+        <div class="videos-grid">
+
+            <div class="video-card">
+                <iframe src="https://www.youtube.com/embed/9bZkp7q19f0" 
+                    title="Taxila Buddhist Ruins UNESCO"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+                <div class="video-title">Taxila Buddhist Ruins UNESCO</div>
+            </div>
+
+            <div class="video-card">
+                <iframe src="https://www.youtube.com/embed/wIZpJw0W8gE" 
+                    title="2000 Years of Taxila History"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowfullscreen>
+                </iframe>
+                <div class="video-title">2000 Years of Taxila History</div>
+            </div>
+
+        </div>
+    </section>
+
+            
+            
+    <section class="media-section">
+        <h3 style="font-size: 1.8rem; color: var(--color-primary-light); margin-bottom: 1rem;">
+            📰 Media Coverage & Reviews
+        </h3>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+            See what travel magazines, news outlets, and vloggers are saying about this destination.
+        </p>
+
+        <div class="media-by-type">
+            <h4 class="media-type-title">📖 Magazine</h4>
+            <ul class="media-list">
+
+                <li class="media-item">
+                    <a href="https://whc.unesco.org/en/list/139/" target="_blank">Taxila - UNESCO World Heritage →</a>
+                    <p class="media-source">Source: UNESCO</p>
+                </li>
+
+            </ul>
+        </div>
+
+        <div class="media-by-type">
+            <h4 class="media-type-title">📡 News</h4>
+            <ul class="media-list">
+
+                <li class="media-item">
+                    <a href="https://en.wikipedia.org/wiki/Taxila" target="_blank">Taxila Buddhist Ruins →</a>
+                    <p class="media-source">Source: Wikipedia</p>
+                </li>
+
+            </ul>
+        </div>
+
+    </section>
+
+            
             <div class="entries-section">
                 <h3>My Travel Experiences in Taxila</h3>
                 
@@ -53,41 +121,39 @@
                     <span class="meta-tag">⭐ 5.0/5</span>
                     <span class="meta-tag">Historical</span>
                 </div>
-                <p class="entry-description">"UNESCO World Heritage Site. Julian monastery ruins — 2000 years of history under open sky."</p>
+                <p style="color: var(--text-secondary); font-style: italic; margin: 1rem 0;">"UNESCO World Heritage Site. Julian monastery ruins — 2000 years of history under open sky."</p>
                 <img src="photos/WhatsApp Image 2026-06-19 at 6.44.50 PM.jpeg" alt="Taxila Buddhist Site (Julian)" class="entry-photo">
             </div>
-            
+
             </div>
         </div>
     </section>
 
     <footer>
         <p><strong>My Pakistan Travel Diary</strong></p>
-        <p>Exploring Taxila - one journey at a time</p>
-        <p style="margin-top: 0.5rem; font-size: 0.9rem;">
-            📍 <strong>Coordinates:</strong> 33.7456°N, 72.8089°E
+        <p>Celebrating Pakistan's beauty, culture, and adventure</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem;">
+            📍 Taxila • Coordinates: 33.7456°N, 72.8089°E
+        </p>
+        <p style="margin-top: 1rem; color: rgba(255,255,255,0.8); font-size: 0.85rem;">
+            Mental Wellness Support: Umang helpline <strong>0317-4288665</strong>
         </p>
     </footer>
 
+    <script src="https://maps.googleapis.com/maps/api/js?key="></script>
     <script>
-        // Initialize OpenStreetMap with Leaflet
         function initMap() {
             const map = L.map('map').setView([33.745601654052734, 72.80889892578125], 12);
-            
-            // OpenStreetMap tile layer (completely free)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors',
-                maxZoom: 18,
-                className: 'leaflet-tile'
+                maxZoom: 18
             }).addTo(map);
             
-            // Add marker for the city
-            L.marker([33.745601654052734, 72.80889892578125], {
-                title: 'Taxila'
-            }).addTo(map).bindPopup('<b>Taxila</b><br>Your travel destination').openPopup();
+            L.marker([33.745601654052734, 72.80889892578125]).addTo(map)
+                .bindPopup('<b>Taxila</b><br>Ancient UNESCO World Heritage Site. Home to Buddhi...')
+                .openPopup();
         }
         
-        // Initialize map when page loads
         window.addEventListener('load', initMap);
         
         function toggleTheme() {
@@ -105,7 +171,6 @@
             }
         }
         
-        // Load saved theme on page load
         if (localStorage.getItem('theme') === 'dark') {
             document.body.classList.add('dark-mode');
             document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
