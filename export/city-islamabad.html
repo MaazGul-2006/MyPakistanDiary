@@ -6,7 +6,6 @@
     <title>Islamabad - My Pakistan Travel Diary</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 </head>
 <body>
     <nav class="navbar">
@@ -40,7 +39,6 @@
                 </div>
             </div>
             
-            <div class="map-container" id="map"></div>
             
             
     <section class="videos-section">
@@ -103,6 +101,7 @@
     </section>
 
             
+            <div class="map-container" id="map"></div>
             <div class="entries-section">
                 <h3>My Travel Experiences in Islamabad</h3>
                 
@@ -169,7 +168,6 @@
         </p>
     </footer>
 
-    <script src="https://maps.googleapis.com/maps/api/js?key="></script>
     <script>
         function initMap() {
             const map = L.map('map').setView([33.729400634765625, 73.18820190429688], 12);
@@ -204,6 +202,78 @@
             document.body.classList.add('dark-mode');
             document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
         }
+    </script>
+    <script>
+        function initMap() {
+            const map = L.map('map').setView([33.7294, 73.1882], 12);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors',
+                maxZoom: 18
+            }).addTo(map);
+            L.marker([33.7294, 73.1882]).addTo(map)
+                .bindPopup('<b>Islamabad</b><br>Pakistan's capital nestled in the Margalla Hills')
+                .openPopup();
+        }
+        window.addEventListener('load', initMap);
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                button.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark-mode');
+                button.textContent = '☀️ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
+        }
+    </script>
+</html>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+    <script>
+        function initMap() {
+            const mapElement = document.getElementById('map');
+            if (mapElement) {
+                const map = L.map('map').setView([33.7294, 73.1882], 12);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors',
+                    maxZoom: 18
+                }).addTo(map);
+                L.marker([33.7294, 73.1882]).addTo(map)
+                    .bindPopup('<b>Islamabad</b><br>Pakistan\'s capital nestled in the Margalla Hills')
+                    .openPopup();
+            }
+        }
+        
+        function toggleTheme() {
+            const body = document.body;
+            const button = document.querySelector('.theme-toggle');
+            if (body.classList.contains('dark-mode')) {
+                body.classList.remove('dark-mode');
+                button.textContent = '🌙 Dark Mode';
+                localStorage.setItem('theme', 'light');
+            } else {
+                body.classList.add('dark-mode');
+                button.textContent = '☀️ Light Mode';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+        
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            if (document.querySelector('.theme-toggle')) {
+                document.querySelector('.theme-toggle').textContent = '☀️ Light Mode';
+            }
+        }
+        
+        window.addEventListener('load', initMap);
     </script>
 </body>
 </html>
