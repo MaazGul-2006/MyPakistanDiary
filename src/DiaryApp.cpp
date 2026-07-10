@@ -643,7 +643,7 @@ void DiaryApp::handleAddEntryInput(sf::Event& event) {
     int fieldCount = 9;
 
     // F to open file browser for photo
-    if (event.key.code == sf::Keyboard::F) {
+    if (event.key.alt && event.key.code == sf::Keyboard::P) {
        if (m_activeField == 8) {  // Photo field is index 8
           std::cout << "Opening file picker...\n";
           std::string selectedPath = openFilePickerForPhoto();
@@ -896,7 +896,7 @@ void DiaryApp::drawAddEntryScreen() {
     hint.setFillColor(m_textSecondary);
     hint.setString(
     "Tab = next field   Enter = save   Esc = cancel   "
-    "F (in Photo field) = browse files");
+    "Alt+P (in Photo field) = browse files");
     hint.setPosition(40.f, 560.f);
     m_window.draw(hint);
 }
@@ -1184,7 +1184,7 @@ void DiaryApp::drawEditEntryScreen() {
     hint.setFillColor(m_textSecondary);
     hint.setString(
     "Tab = next field   Enter = save   Esc = cancel   "
-    "F (in Photo field) = browse files");
+    "Alt+P (in Photo field) = browse files");
     hint.setPosition(40.f, 560.f);
     m_window.draw(hint);
 }
@@ -1313,7 +1313,7 @@ void DiaryApp::handleEditEntryInput(sf::Event& event) {
     int fieldCount = 9;
 
     // F to open file browser for photo
-if (event.key.code == sf::Keyboard::F) {
+if (event.key.alt && event.key.code == sf::Keyboard::P) {
     if (m_activeField == 8) {  // Photo field is index 8
         std::cout << "Opening file picker...\n";
         std::string selectedPath = openFilePickerForPhoto();
