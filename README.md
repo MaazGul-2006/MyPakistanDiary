@@ -444,3 +444,59 @@ MIT License — See LICENSE file (free to use, modify, share)
 ---
 
 **Built with ❤️ for a healthier, more connected Pakistan.**
+
+---
+
+## 🎭 Mood Tracking System (V1 Core Feature)
+
+### What is Mood Tracking?
+Every travel entry captures your emotional state at that moment. This creates a **personal wellness timeline** showing how different places affect your mental health.
+
+### Mood Categories
+The app tracks 6 distinct moods:
+- **Peaceful** (😌) — Calm, serene, meditative moments
+- **Joyful** (😊) — Happy, excited, energetic feelings
+- **Reflective** (🤔) — Thoughtful, introspective, contemplative
+- **Nostalgic** (🥰) — Reminiscing, sentimental, bittersweet
+- **Energized** (⚡) — Pumped up, adventurous, enthusiastic
+- **Anxious** (😰) — Worried, stressed, uneasy feelings
+
+### How to Use Mood Tracking
+
+**When Adding an Entry:**
+1. Press `A` to create new entry
+2. Fill place, city, date, description
+3. **Select a Mood** — Choose how you felt at that location
+4. Set Rating (1-5 stars)
+5. Press `Enter` to save
+
+**Example Workflow:**
+Place: Faisal Mosque
+City: Islamabad
+Date: 2026-06-06
+Mood: Peaceful ← This captures your emotional state
+Rating: 5 ⭐⭐⭐⭐⭐
+Description: "Visited at sunset, felt calm and connected to spirituality"
+### Personal Insights from Mood Tracking
+
+After recording multiple entries, you can identify patterns:
+
+**Example Analytics:**
+- Faisal Mosque (3 visits) → Always Peaceful
+- Food Street Lahore (2 visits) → Joyful + Energized
+- Taxila Museum (1 visit) → Reflective + Nostalgic
+- Mountain hikes → Energized + Peaceful
+
+**Your Personal Wellness Timeline:**
+The mood tags create a record of what places heal you, excite you, or make you anxious—helping you plan future trips accordingly.
+
+### Wisdom of Crowds — Mood Distribution
+
+When multiple travelers log the same place with different moods, the app aggregates:
+Before Trip (Pre-Trip Check):
+"How are you feeling?" → Nervous (2/4)
+After Trip (Mood Tag):
+Actual mood at Taxila → Peaceful
+Insight: "I was nervous beforehand, but Taxila actually made me feel peaceful!"
+---
+
